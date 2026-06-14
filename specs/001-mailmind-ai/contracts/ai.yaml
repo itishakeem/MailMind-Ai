@@ -1,0 +1,103 @@
+openapi: "3.0.3"
+info:
+  title: MailMind AI — AI Generation Contracts
+  version: "1.0.0"
+
+paths:
+  /api/ai/detect-type:
+    post:
+      summary: Classify input context into an email type (first pass before generation)
+      security: [{ cookieAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                text:
+                  type: string
+                  description: Free-text description or PDF extracted text
+                  minLength: 10
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detected_type:
+                    type: string
+                    enum: [invoice, payment_reminder, project_update, proposal]
+                  confidence:
+                    type: string
+                    enum: [high, medium, low]
+        "503":
+          description: AI pipeline unavailable (both primary and fallback failed)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AIUnavailableError" }
+        "401": { description: Not authenticated }
+
+  /api/ai/generate:
+    post:
+      summary: Generate a professional email subject and body
+      security: [{ cookieAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [text, tone, email_type]
+              properties:
+                text:
+                  type: string
+                  description: Free-text description or PDF extracted text
+                  minLength: 10
+                tone:
+                  type: string
+                  enum: [friendly, formal, strict]
+                email_type:
+                  type: string
+                  enum: [invoice, payment_reminder, project_update, proposal]
+                  description: User-confirmed type (from detect-type or user correction)
+                client_name:
+                  type: string
+                  description: Optional; injected into prompt for personalisation
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  subject:       { type: string }
+                  body:          { type: string }
+                  model_used:
+                    type: string
+                    enum: [gemini-flash, nemotron-3-super, none]
+                    description: Which AI model generated the response
+        "503":
+          description: Both AI models unavailable; return manual compose flag
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AIUnavailableError" }
+        "400":
+          description: Input text too short or email_type not valid
+        "401": { description: Not authenticated }
+
+components:
+  schemas:
+    AIUnavailableError:
+      type: object
+      properties:
+        error:          { type: string }
+        fallback_mode:  { type: boolean, description: "true = show manual compose form" }
+        retry_after_ms: { type: integer, description: "Suggested retry delay in ms" }
+
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: sb-access-token

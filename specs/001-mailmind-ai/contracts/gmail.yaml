@@ -1,0 +1,73 @@
+openapi: "3.0.3"
+info:
+  title: MailMind AI — Gmail Integration Contracts
+  version: "1.0.0"
+
+paths:
+  /api/gmail/connect:
+    get:
+      summary: Initiate Gmail OAuth flow; redirects user to Google consent screen
+      security: [{ cookieAuth: [] }]
+      responses:
+        "302":
+          description: Redirect to Google OAuth with gmail.send scope
+        "401":
+          description: Not authenticated
+
+  /api/gmail/callback:
+    get:
+      summary: Handle Google OAuth callback after user grants Gmail permission
+      security: [{ cookieAuth: [] }]
+      parameters:
+        - name: code
+          in: query
+          required: true
+          schema: { type: string }
+        - name: state
+          in: query
+          required: true
+          schema: { type: string }
+      responses:
+        "302":
+          description: Redirect to /dashboard?gmail=connected on success
+        "302-error":
+          description: Redirect to /settings?error=gmail_denied on failure
+
+  /api/gmail/disconnect:
+    delete:
+      summary: Revoke Gmail access and pause all scheduled emails
+      security: [{ cookieAuth: [] }]
+      responses:
+        "200":
+          description: Gmail disconnected; scheduled emails paused
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  paused_count: { type: integer, description: "Number of scheduled emails paused" }
+        "401":
+          description: Not authenticated
+
+  /api/gmail/status:
+    get:
+      summary: Get current Gmail connection status
+      security: [{ cookieAuth: [] }]
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  connected:   { type: boolean }
+                  gmail_email: { type: string, nullable: true }
+        "401":
+          description: Not authenticated
+
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: sb-access-token

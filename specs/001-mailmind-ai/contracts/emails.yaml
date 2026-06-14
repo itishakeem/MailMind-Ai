@@ -1,0 +1,257 @@
+openapi: "3.0.3"
+info:
+  title: MailMind AI — Email Send & Schedule Contracts
+  version: "1.0.0"
+
+paths:
+  /api/documents/upload:
+    post:
+      summary: Upload a PDF and extract its text for AI context
+      security: [{ cookieAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: PDF file, max 10 MB
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  document_id:    { type: string, format: uuid }
+                  extracted_text: { type: string }
+                  filename:       { type: string }
+        "400":
+          description: Extraction failed (password-protected, image-only, or corrupt PDF)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "413":
+          description: File exceeds 10 MB limit
+        "401": { description: Not authenticated }
+
+  /api/emails/send:
+    post:
+      summary: Send an email immediately from the user's Gmail
+      security: [{ cookieAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/EmailSendInput" }
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  email_id:        { type: string, format: uuid }
+                  gmail_message_id: { type: string }
+        "400": { description: Validation error }
+        "402": { description: Free plan monthly email limit reached }
+        "503":
+          description: Gmail API unavailable
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "401": { description: Not authenticated or Gmail not connected }
+
+  /api/emails/schedule:
+    post:
+      summary: Schedule an email for future delivery
+      security: [{ cookieAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "#/components/schemas/EmailSendInput"
+                - type: object
+                  required: [scheduled_at]
+                  properties:
+                    scheduled_at:
+                      type: string
+                      format: date-time
+                      description: Must be at least 1 minute in the future
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  email_id:     { type: string, format: uuid }
+                  scheduled_at: { type: string, format: date-time }
+        "400":
+          description: scheduled_at is in the past
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "402": { description: Plan limit reached }
+        "401": { description: Not authenticated or Gmail not connected }
+
+  /api/emails/scheduled:
+    get:
+      summary: List all pending scheduled emails for the authenticated user
+      security: [{ cookieAuth: [] }]
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  emails:
+                    type: array
+                    items: { $ref: "#/components/schemas/ScheduledEmail" }
+        "401": { description: Not authenticated }
+
+  /api/emails/{id}/reschedule:
+    put:
+      summary: Update the delivery time of a scheduled email
+      security: [{ cookieAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [scheduled_at]
+              properties:
+                scheduled_at: { type: string, format: date-time }
+      responses:
+        "200":
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ScheduledEmail" }
+        "400":
+          description: Email is not in scheduled status, or new time is in the past
+        "404": { description: Email not found }
+        "401": { description: Not authenticated }
+
+  /api/emails/{id}/cancel:
+    delete:
+      summary: Cancel a pending scheduled email
+      security: [{ cookieAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+        "400":
+          description: Email is not in scheduled status (already sent or failed)
+        "404": { description: Email not found }
+        "401": { description: Not authenticated }
+
+  /api/emails/{id}/retry:
+    post:
+      summary: Retry a failed email
+      security: [{ cookieAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  email_id:         { type: string, format: uuid }
+                  gmail_message_id: { type: string }
+        "400":
+          description: Email is not in failed status
+        "503": { description: Gmail API still unavailable }
+        "401": { description: Not authenticated }
+
+  /api/cron/send-scheduled:
+    post:
+      summary: Internal cron endpoint — process and send all due scheduled emails
+      description: Called by Vercel Cron every 5 minutes. Protected by CRON_SECRET.
+      security: [{ cronBearerAuth: [] }]
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  processed: { type: integer }
+                  succeeded: { type: integer }
+                  failed:    { type: integer }
+        "401": { description: Missing or invalid CRON_SECRET }
+
+components:
+  schemas:
+    EmailSendInput:
+      type: object
+      required: [client_id, subject, body]
+      properties:
+        client_id:        { type: string, format: uuid }
+        subject:          { type: string, minLength: 1, maxLength: 500 }
+        body:             { type: string, minLength: 1 }
+        ai_detected_type:
+          type: string
+          nullable: true
+          enum: [invoice, payment_reminder, project_update, proposal, manual]
+        tone:
+          type: string
+          nullable: true
+          enum: [friendly, formal, strict]
+
+    ScheduledEmail:
+      type: object
+      properties:
+        id:               { type: string, format: uuid }
+        client_snapshot:
+          type: object
+          properties:
+            name:  { type: string }
+            email: { type: string }
+        subject:          { type: string }
+        status:           { type: string, enum: [scheduled, failed] }
+        scheduled_at:     { type: string, format: date-time }
+        failure_reason:   { type: string, nullable: true }
+        created_at:       { type: string, format: date-time }
+
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:   { type: string }
+        details: { type: string }
+
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: sb-access-token
+    cronBearerAuth:
+      type: http
+      scheme: bearer

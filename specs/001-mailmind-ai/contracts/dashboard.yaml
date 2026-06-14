@@ -1,0 +1,77 @@
+openapi: "3.0.3"
+info:
+  title: MailMind AI — Dashboard & Analytics Contracts
+  version: "1.0.0"
+
+paths:
+  /api/dashboard/stats:
+    get:
+      summary: Get all dashboard statistics for the authenticated user
+      security: [{ cookieAuth: [] }]
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  emails_sent_this_month:
+                    type: integer
+                    description: Count of emails with status=sent and sent_at in current calendar month
+                  scheduled_count:
+                    type: integer
+                    description: Count of emails with status=scheduled
+                  per_client_activity:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        client_id:    { type: string, format: uuid, nullable: true }
+                        client_name:  { type: string }
+                        email_count:  { type: integer }
+                        last_sent_at: { type: string, format: date-time, nullable: true }
+                  monthly_summary:
+                    type: string
+                    nullable: true
+                    description: AI-generated narrative summary of the month's email activity
+                  plan:
+                    type: string
+                    enum: [free, pro, business]
+                  plan_usage:
+                    type: object
+                    properties:
+                      emails_used:    { type: integer }
+                      emails_limit:   { type: integer, nullable: true }
+                      clients_used:   { type: integer }
+                      clients_limit:  { type: integer, nullable: true }
+        "401": { description: Not authenticated }
+
+  /api/dashboard/monthly-summary:
+    post:
+      summary: Generate (or regenerate) the AI monthly summary
+      description: Called lazily when the dashboard loads and summary is null or stale.
+      security: [{ cookieAuth: [] }]
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  summary: { type: string }
+        "503":
+          description: AI unavailable; return null summary
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  summary: { type: string, nullable: true }
+        "401": { description: Not authenticated }
+
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: sb-access-token

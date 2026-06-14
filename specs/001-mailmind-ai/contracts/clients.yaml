@@ -1,0 +1,166 @@
+openapi: "3.0.3"
+info:
+  title: MailMind AI — Client Management Contracts
+  version: "1.0.0"
+
+paths:
+  /api/clients:
+    get:
+      summary: List all clients for the authenticated user
+      security: [{ cookieAuth: [] }]
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  clients:
+                    type: array
+                    items: { $ref: "#/components/schemas/Client" }
+        "401": { description: Not authenticated }
+
+    post:
+      summary: Create a new client
+      security: [{ cookieAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ClientInput" }
+      responses:
+        "201":
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Client" }
+        "400":
+          description: Validation error (missing name/email or invalid email format)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "402":
+          description: Free plan client limit reached (max 3)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PlanLimitError" }
+        "401": { description: Not authenticated }
+
+  /api/clients/{id}:
+    get:
+      summary: Get client details and email history
+      security: [{ cookieAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  client: { $ref: "#/components/schemas/Client" }
+                  emails:
+                    type: array
+                    items: { $ref: "#/components/schemas/EmailSummary" }
+        "404": { description: Client not found or belongs to another user }
+        "401": { description: Not authenticated }
+
+    put:
+      summary: Update client fields
+      security: [{ cookieAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ClientInput" }
+      responses:
+        "200":
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Client" }
+        "400": { description: Validation error }
+        "404": { description: Client not found }
+        "401": { description: Not authenticated }
+
+    delete:
+      summary: Delete client (email history retained)
+      security: [{ cookieAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+        "404": { description: Client not found }
+        "401": { description: Not authenticated }
+
+components:
+  schemas:
+    Client:
+      type: object
+      properties:
+        id:         { type: string, format: uuid }
+        user_id:    { type: string, format: uuid }
+        name:       { type: string }
+        email:      { type: string, format: email }
+        phone:      { type: string, nullable: true }
+        company:    { type: string, nullable: true }
+        address:    { type: string, nullable: true }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+
+    ClientInput:
+      type: object
+      required: [name, email]
+      properties:
+        name:    { type: string, minLength: 1, maxLength: 200 }
+        email:   { type: string, format: email }
+        phone:   { type: string, maxLength: 200, nullable: true }
+        company: { type: string, maxLength: 200, nullable: true }
+        address: { type: string, maxLength: 200, nullable: true }
+
+    EmailSummary:
+      type: object
+      properties:
+        id:         { type: string, format: uuid }
+        subject:    { type: string }
+        status:     { type: string, enum: [draft, scheduled, sent, failed] }
+        sent_at:    { type: string, format: date-time, nullable: true }
+        created_at: { type: string, format: date-time }
+
+    PlanLimitError:
+      type: object
+      properties:
+        error:          { type: string }
+        limit_type:     { type: string, enum: [clients, emails_per_month] }
+        current_count:  { type: integer }
+        max_allowed:    { type: integer }
+        upgrade_url:    { type: string }
+
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:   { type: string }
+        details: { type: string }
+
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: sb-access-token

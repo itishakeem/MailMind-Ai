@@ -1,0 +1,119 @@
+openapi: "3.0.3"
+info:
+  title: MailMind AI — Auth Contracts
+  version: "1.0.0"
+
+paths:
+  /api/auth/signup:
+    post:
+      summary: Register a new user with email and password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, email, password]
+              properties:
+                name:     { type: string, minLength: 1, maxLength: 100 }
+                email:    { type: string, format: email }
+                password: { type: string, minLength: 8 }
+      responses:
+        "201":
+          description: Account created; session cookie set
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+        "400":
+          description: Validation error (missing fields, invalid email format)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "409":
+          description: Email address already registered
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  /api/auth/login:
+    post:
+      summary: Authenticate with email and password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email:    { type: string, format: email }
+                password: { type: string }
+      responses:
+        "200":
+          description: Authenticated; session cookie set
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/UserProfile" }
+        "401":
+          description: Invalid credentials
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  /api/auth/logout:
+    post:
+      summary: Sign out; clears session cookie
+      responses:
+        "200":
+          description: Logged out successfully
+
+  /api/auth/password-reset:
+    post:
+      summary: Send password reset email
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email: { type: string, format: email }
+      responses:
+        "200":
+          description: Reset email sent (always 200 to prevent user enumeration)
+
+  /api/auth/callback:
+    get:
+      summary: Supabase OAuth callback (handles Google login redirect)
+      parameters:
+        - name: code
+          in: query
+          required: true
+          schema: { type: string }
+      responses:
+        "302":
+          description: Redirect to /dashboard or /settings/gmail on success
+        "302-error":
+          description: Redirect to /auth/login?error=... on failure
+
+components:
+  schemas:
+    UserProfile:
+      type: object
+      properties:
+        id:              { type: string, format: uuid }
+        name:            { type: string }
+        email:           { type: string, format: email }
+        plan:            { type: string, enum: [free, pro, business] }
+        gmail_connected: { type: boolean }
+        gmail_email:     { type: string, nullable: true }
+        created_at:      { type: string, format: date-time }
+
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:   { type: string }
+        details: { type: string }
