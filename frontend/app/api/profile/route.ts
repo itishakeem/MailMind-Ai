@@ -8,7 +8,7 @@ export async function GET() {
 
   const { data: profile, error } = await supabase
     .from("users")
-    .select("id, name, email, plan, gmail_email, gmail_token, created_at")
+    .select("id, name, email, plan, gmail_email, gmail_token, email_signature, created_at")
     .eq("id", user.id)
     .single();
 
@@ -38,6 +38,7 @@ export async function GET() {
     plan:            profile.plan,
     gmail_email:     profile.gmail_email,
     gmail_connected: !!profile.gmail_token,
+    email_signature: profile.email_signature ?? "",
     created_at:      profile.created_at,
     stats: {
       emails_sent_this_month: emailCount ?? 0,
@@ -52,21 +53,32 @@ export async function PATCH(request: NextRequest) {
   if (authError || !user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const body = await request.json().catch(() => null);
-  if (!body || typeof body.name !== "string") {
-    return NextResponse.json({ error: "name must be a string" }, { status: 400 });
+  if (!body) return NextResponse.json({ error: "Invalid body" }, { status: 400 });
+
+  const updates: Record<string, string> = {};
+
+  if ("name" in body) {
+    if (typeof body.name !== "string") return NextResponse.json({ error: "name must be a string" }, { status: 400 });
+    const name = body.name.trim();
+    if (!name || name.length > 100) return NextResponse.json({ error: "Name must be 1–100 characters" }, { status: 400 });
+    updates.name = name;
   }
 
-  const name = body.name.trim();
-  if (!name || name.length > 100) {
-    return NextResponse.json({ error: "Name must be 1–100 characters" }, { status: 400 });
+  if ("email_signature" in body) {
+    // Only Pro/Business users can save a signature
+    const { data: userData } = await supabase.from("users").select("plan").eq("id", user.id).single();
+    const isPro = userData?.plan === "pro" || userData?.plan === "business";
+    if (!isPro) return NextResponse.json({ error: "Pro plan required", upgrade_required: true }, { status: 403 });
+
+    if (typeof body.email_signature !== "string") return NextResponse.json({ error: "email_signature must be a string" }, { status: 400 });
+    const sig = body.email_signature.slice(0, 500);
+    updates.email_signature = sig;
   }
 
-  const { error } = await supabase
-    .from("users")
-    .update({ name })
-    .eq("id", user.id);
+  if (Object.keys(updates).length === 0) return NextResponse.json({ error: "Nothing to update" }, { status: 400 });
 
+  const { error } = await supabase.from("users").update(updates).eq("id", user.id);
   if (error) return NextResponse.json({ error: "Failed to update profile" }, { status: 500 });
 
-  return NextResponse.json({ success: true, name });
+  return NextResponse.json({ success: true, ...updates });
 }

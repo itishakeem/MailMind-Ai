@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import ClientForm from "@/components/clients/ClientForm";
 import ClientHistory from "@/components/clients/ClientHistory";
+import ClientNotes from "@/components/clients/ClientNotes";
 import type { Client, Email } from "@/types";
 
 type EmailHistoryItem = Pick<
@@ -32,6 +33,7 @@ export default function ClientDetailPage() {
   const [loading,  setLoading]  = useState(true);
   const [editMode, setEditMode] = useState(false);
   const [notFound, setNotFound] = useState(false);
+  const [isPro, setIsPro] = useState(false);
 
   useEffect(() => {
     if (!params?.id) return;
@@ -44,6 +46,10 @@ export default function ClientDetailPage() {
         setLoading(false);
       })
       .catch(() => { setNotFound(true); setLoading(false); });
+    fetch("/api/dashboard/stats")
+      .then(r => r.json())
+      .then(d => setIsPro(d.plan === "pro" || d.plan === "business"))
+      .catch(() => {});
   }, [params?.id]);
 
   function handleUpdated(updated: Client) {
@@ -146,6 +152,12 @@ export default function ClientDetailPage() {
             ))}
           </dl>
         )}
+      </div>
+
+      {/* Client Notes (Pro) */}
+      <div style={cardStyle} className="p-6">
+        <h2 className="text-base font-bold text-gray-900 mb-4">Private Notes</h2>
+        <ClientNotes clientId={client.id} isPro={isPro} />
       </div>
 
       {/* Email History */}

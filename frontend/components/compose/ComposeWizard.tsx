@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import PDFUpload from "@/components/compose/PDFUpload";
 import ToneSelector from "@/components/compose/ToneSelector";
 import AIPreview from "@/components/compose/AIPreview";
-import type { Client, EmailType, Tone } from "@/types";
+import TemplatePicker from "@/components/compose/TemplatePicker";
+import type { Client, EmailTemplate, EmailType, Tone } from "@/types";
 
 interface ComposeWizardProps {
   initialClientId?: string;
@@ -38,12 +39,35 @@ export default function ComposeWizard({
   const [sending, setSending] = useState(false);
   const [scheduling, setScheduling] = useState(false);
   const [stepError, setStepError] = useState<string | null>(null);
+  const [isPro, setIsPro] = useState(false);
 
   useEffect(() => {
     fetch("/api/clients")
       .then((r) => r.json())
       .then((d) => setClients(d.clients ?? []));
+    fetch("/api/dashboard/stats")
+      .then((r) => r.json())
+      .then((d) => setIsPro(d.plan === "pro" || d.plan === "business"));
   }, []);
+
+  async function handleSaveTemplate(name: string) {
+    if (!subject && !body) throw new Error("Generate an email first before saving as template.");
+    const res = await fetch("/api/templates", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, subject, body }),
+    });
+    if (!res.ok) {
+      const data = await res.json();
+      throw new Error(data.error ?? "Failed to save template.");
+    }
+  }
+
+  function handleLoadTemplate(template: EmailTemplate) {
+    setSubject(template.subject);
+    setBody(template.body);
+    if (step !== 3) setStep(3);
+  }
 
   const selectedClient = clients.find((c) => c.id === selectedClientId);
 
@@ -326,7 +350,7 @@ export default function ComposeWizard({
             <span className="font-medium">To:</span> {selectedClient?.name} ({selectedClient?.email})
           </div>
 
-          <ToneSelector value={tone} onChange={setTone} />
+          <ToneSelector value={tone} onChange={setTone} isPro={isPro} />
 
           <div className="flex gap-3">
             <button
@@ -367,6 +391,15 @@ export default function ComposeWizard({
               Change
             </button>
           </div>
+
+          {/* Template picker — Pro only */}
+          {isPro && (
+            <TemplatePicker
+              onSelect={handleLoadTemplate}
+              onSave={handleSaveTemplate}
+              canSave={!!(subject || body)}
+            />
+          )}
 
           <AIPreview
             detectedType={detectedType}

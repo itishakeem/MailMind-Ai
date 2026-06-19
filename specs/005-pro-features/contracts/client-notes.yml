@@ -1,0 +1,144 @@
+openapi: "3.0.0"
+info:
+  title: Client Notes API
+  version: "1.0"
+  description: Private notes attached to client records (Pro only)
+
+paths:
+  /api/clients/{clientId}/notes:
+    get:
+      summary: List notes for a client (reverse-chronological)
+      security: [{ supabaseAuth: [] }]
+      parameters:
+        - name: clientId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Array of notes ordered by created_at DESC
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ClientNote"
+        "401":
+          description: Not authenticated
+        "403":
+          description: Free plan — upgrade required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UpgradeRequired"
+        "404":
+          description: Client not found or not owned by user
+
+    post:
+      summary: Add a note to a client
+      security: [{ supabaseAuth: [] }]
+      parameters:
+        - name: clientId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [body]
+              properties:
+                body:
+                  type: string
+                  minLength: 1
+                  maxLength: 2000
+      responses:
+        "201":
+          description: Note created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClientNote"
+        "400":
+          description: Validation error
+        "401":
+          description: Not authenticated
+        "403":
+          description: Free plan or not client owner
+        "404":
+          description: Client not found
+
+  /api/clients/{clientId}/notes/{noteId}:
+    delete:
+      summary: Delete a note
+      security: [{ supabaseAuth: [] }]
+      parameters:
+        - name: clientId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: noteId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+        "401":
+          description: Not authenticated
+        "403":
+          description: Not owner
+        "404":
+          description: Note not found
+
+components:
+  schemas:
+    ClientNote:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        client_id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        body:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+    UpgradeRequired:
+      type: object
+      properties:
+        error:
+          type: string
+          example: "Pro plan required"
+        upgrade_required:
+          type: boolean
+          example: true
+
+  securitySchemes:
+    supabaseAuth:
+      type: http
+      scheme: bearer

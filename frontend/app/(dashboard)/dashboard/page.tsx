@@ -7,9 +7,125 @@ import StatCard from "@/components/dashboard/StatCard";
 import ClientActivityTable from "@/components/dashboard/ClientActivityTable";
 import MonthlySummary from "@/components/dashboard/MonthlySummary";
 import GmailConnectBanner from "@/components/ui/GmailConnectBanner";
+import ProBadge from "@/components/ui/ProBadge";
 import Skeleton from "@/components/ui/Skeleton";
 import { useToast } from "@/components/ui/Toast";
 import type { DashboardStats } from "@/types";
+
+/* ── Circular progress ring ────────────────────────────────────────── */
+function CircularProgress({
+  pct,
+  color,
+  size = 80,
+  stroke = 8,
+}: {
+  pct: number;
+  color: string;
+  size?: number;
+  stroke?: number;
+}) {
+  const r    = (size - stroke) / 2;
+  const circ = 2 * Math.PI * r;
+  const offset = circ * (1 - Math.min(pct, 100) / 100);
+  const c    = size / 2;
+  return (
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+      <circle cx={c} cy={c} r={r} fill="none" stroke="rgba(0,0,0,0.06)" strokeWidth={stroke} />
+      <circle
+        cx={c} cy={c} r={r}
+        fill="none"
+        stroke={color}
+        strokeWidth={stroke}
+        strokeLinecap="round"
+        strokeDasharray={circ}
+        strokeDashoffset={offset}
+        transform={`rotate(-90 ${c} ${c})`}
+        style={{ transition: "stroke-dashoffset 1s cubic-bezier(0.22,1,0.36,1)" }}
+      />
+    </svg>
+  );
+}
+
+function PlanUsageSection({ stats }: { stats: DashboardStats }) {
+  if (stats.plan !== "free") return null;
+
+  const emailPct  = stats.plan_usage.emails_limit
+    ? Math.round((stats.plan_usage.emails_used / stats.plan_usage.emails_limit) * 100)
+    : 0;
+  const clientPct = stats.plan_usage.clients_limit
+    ? Math.round((stats.plan_usage.clients_used / stats.plan_usage.clients_limit) * 100)
+    : 0;
+
+  const emailColor  = emailPct  >= 90 ? "#ef4444" : emailPct  >= 70 ? "#f59e0b" : "#3b82f6";
+  const clientColor = clientPct >= 90 ? "#ef4444" : clientPct >= 70 ? "#f59e0b" : "#10b981";
+
+  return (
+    <div
+      className="bg-white rounded-2xl p-6 animate-fade-in-up"
+      style={{ border: "1px solid rgba(0,0,0,0.06)", boxShadow: "0 1px 4px rgba(0,0,0,0.05)", animationDelay: "200ms" }}
+    >
+      <div className="flex items-center justify-between mb-5 flex-wrap gap-3">
+        <div>
+          <h2 className="text-base font-bold text-gray-900">Free Plan Usage</h2>
+          <p className="text-xs text-gray-400 mt-0.5">Your monthly limits at a glance</p>
+        </div>
+        <Link
+          href="/#pricing"
+          className="inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-bold text-white transition-all hover:-translate-y-0.5"
+          style={{ background: "linear-gradient(135deg,#2563eb,#4f46e5)", boxShadow: "0 4px 14px rgba(79,70,229,0.35)" }}
+        >
+          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
+          </svg>
+          Upgrade to Pro
+        </Link>
+      </div>
+
+      <div className="grid grid-cols-2 gap-6">
+        {/* Emails ring */}
+        <div className="flex flex-col items-center gap-3">
+          <div className="relative">
+            <CircularProgress pct={emailPct} color={emailColor} size={100} stroke={10} />
+            <div className="absolute inset-0 flex flex-col items-center justify-center">
+              <span className="text-xl font-black text-gray-900">{emailPct}%</span>
+            </div>
+          </div>
+          <div className="text-center">
+            <p className="text-sm font-bold text-gray-900">Emails</p>
+            <p className="text-xs text-gray-400">
+              {stats.plan_usage.emails_used} / {stats.plan_usage.emails_limit} used
+            </p>
+          </div>
+        </div>
+
+        {/* Clients ring */}
+        <div className="flex flex-col items-center gap-3">
+          <div className="relative">
+            <CircularProgress pct={clientPct} color={clientColor} size={100} stroke={10} />
+            <div className="absolute inset-0 flex flex-col items-center justify-center">
+              <span className="text-xl font-black text-gray-900">{clientPct}%</span>
+            </div>
+          </div>
+          <div className="text-center">
+            <p className="text-sm font-bold text-gray-900">Clients</p>
+            <p className="text-xs text-gray-400">
+              {stats.plan_usage.clients_used} / {stats.plan_usage.clients_limit} used
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {(emailPct >= 80 || clientPct >= 80) && (
+        <div
+          className="mt-5 rounded-xl px-4 py-3 text-xs font-medium animate-fade-in"
+          style={{ background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.25)", color: "#b45309" }}
+        >
+          You&apos;re approaching your plan limit. Upgrade to Pro for unlimited emails and clients.
+        </div>
+      )}
+    </div>
+  );
+}
 
 /* ── Stat card config ──────────────────────────────────────────── */
 const STAT_ICONS = {
@@ -81,26 +197,65 @@ function DashboardContent() {
 
       {/* Header */}
       <FadeSection delay={80}>
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-4">
           <div>
-            <h1 className="text-2xl font-extrabold text-gray-900">Dashboard</h1>
+            <div className="flex items-center gap-3 flex-wrap">
+              <h1 className="text-2xl font-extrabold text-gray-900">
+                {stats?.user_name ? `Welcome back, ${stats.user_name.split(" ")[0]} 👋` : "Dashboard"}
+              </h1>
+              {stats?.plan && <ProBadge plan={stats.plan} size="md" />}
+            </div>
             <p className="mt-1 text-sm text-gray-500">
               Your email activity overview for this month.
             </p>
           </div>
-          <Link
-            href="/compose"
-            className="inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold text-white transition-all hover:-translate-y-0.5"
-            style={{
-              background: "linear-gradient(135deg,#2563eb,#4f46e5)",
-              boxShadow: "0 4px 14px rgba(79,70,229,0.35)",
-            }}
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-            </svg>
-            Quick Compose
-          </Link>
+          <div className="flex items-center gap-3">
+            {stats?.plan === "free" && (
+              <Link
+                href="/#pricing"
+                className="inline-flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-bold transition-all hover:-translate-y-0.5"
+                style={{
+                  background: "rgba(99,102,241,0.08)",
+                  border: "1px solid rgba(99,102,241,0.3)",
+                  color: "#4f46e5",
+                }}
+              >
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+                Upgrade
+              </Link>
+            )}
+            {(stats?.plan === "pro" || stats?.plan === "business") && (
+              <a
+                href="/api/export/emails"
+                className="inline-flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all hover:-translate-y-0.5"
+                style={{
+                  background: "rgba(16,185,129,0.08)",
+                  border: "1px solid rgba(16,185,129,0.3)",
+                  color: "#059669",
+                }}
+              >
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                Export CSV
+              </a>
+            )}
+            <Link
+              href="/compose"
+              className="inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold text-white transition-all hover:-translate-y-0.5"
+              style={{
+                background: "linear-gradient(135deg,#2563eb,#4f46e5)",
+                boxShadow: "0 4px 14px rgba(79,70,229,0.35)",
+              }}
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              Quick Compose
+            </Link>
+          </div>
         </div>
       </FadeSection>
 
@@ -145,6 +300,13 @@ function DashboardContent() {
           />
         </div>
       </FadeSection>
+
+      {/* Plan usage rings — free plan only */}
+      {stats && stats.plan === "free" && (
+        <FadeSection delay={200}>
+          <PlanUsageSection stats={stats} />
+        </FadeSection>
+      )}
 
       {/* Client activity */}
       <FadeSection delay={240}>

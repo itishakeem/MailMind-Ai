@@ -12,6 +12,9 @@ const TONE_DESCRIPTIONS: Record<Tone, string> = {
   friendly: "warm and approachable while staying professional",
   formal: "formal and professional, using proper business salutations",
   strict: "firm and direct, making requirements or urgency very clear",
+  urgent: "time-sensitive and deadline-focused, conveying importance without being rude",
+  apologetic: "sincere and empathetic, acknowledging a mistake or delay with accountability",
+  persuasive: "benefit-led and motivating, focusing on value and clear next steps",
 };
 
 // First-pass classification prompt — expects JSON { type, confidence }
@@ -38,13 +41,17 @@ export function buildGenerateEmailPrompt(
   text: string,
   type: EmailType,
   tone: Tone,
-  clientName?: string
+  clientName?: string,
+  senderName?: string
 ): string {
   const typeName = TYPE_LABELS[type] ?? "Email";
   const toneDesc = TONE_DESCRIPTIONS[tone] ?? tone;
   const greeting = clientName
     ? `Use "Dear ${clientName}," as the greeting`
     : 'Use "Dear [Client Name]," as the greeting';
+  const closing = senderName
+    ? `end with "Best regards,\\n${senderName}"`
+    : 'end with "Best regards,\\n[Your Name]"';
 
   return `You are a professional email writer for a South Asian freelancer.
 
@@ -59,7 +66,7 @@ ${text.slice(0, 3000)}
 
 Rules:
 - Subject: concise, professional, under 80 characters
-- Body: 3–4 short paragraphs; end with "Best regards,\\n[Your Name]"
+- Body: 3–4 short paragraphs; ${closing}
 - Do not invent financial figures or dates not present in the context
 - If currency is mentioned use PKR / Rs. format
 - Total body under 300 words

@@ -2,14 +2,14 @@
 // Source of truth: specs/001-mailmind-ai/data-model.md
 
 export type Plan = "free" | "pro" | "business";
-export type EmailStatus = "draft" | "scheduled" | "sent" | "failed";
+export type EmailStatus = "draft" | "scheduled" | "sending" | "sent" | "failed";
 export type EmailType =
   | "invoice"
   | "payment_reminder"
   | "project_update"
   | "proposal"
   | "manual";
-export type Tone = "friendly" | "formal" | "strict";
+export type Tone = "friendly" | "formal" | "strict" | "urgent" | "apologetic" | "persuasive";
 
 export interface User {
   id: string;
@@ -84,11 +84,29 @@ export interface PlanLimitError {
   upgrade_url: string;
 }
 
+export interface EmailTemplate {
+  id: string;
+  user_id: string;
+  name: string;
+  subject: string;
+  body: string;
+  created_at: string;
+}
+
+export interface ClientNote {
+  id: string;
+  client_id: string;
+  user_id: string;
+  body: string;
+  created_at: string;
+}
+
 export interface DashboardStats {
   emails_sent_this_month: number;
   scheduled_count: number;
   per_client_activity: ClientActivity[];
   plan: Plan;
+  user_name: string | null;
   plan_usage: PlanUsage;
 }
 
@@ -109,7 +127,7 @@ export interface PlanUsage {
 export interface AIGenerateResult {
   subject: string;
   body: string;
-  model_used: "gemini-flash" | "nemotron-3-super" | "none";
+  model_used: "gemini-flash" | "nemotron-free" | "none";
 }
 
 export interface AIDetectTypeResult {

@@ -1,0 +1,136 @@
+openapi: "3.0.0"
+info:
+  title: Email Templates API
+  version: "1.0"
+  description: CRUD for Pro user email templates
+
+paths:
+  /api/templates:
+    get:
+      summary: List all templates for the authenticated Pro user
+      security: [{ supabaseAuth: [] }]
+      responses:
+        "200":
+          description: Array of templates ordered by created_at DESC
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/EmailTemplate"
+        "401":
+          description: Not authenticated
+        "403":
+          description: Free plan — upgrade required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UpgradeRequired"
+
+    post:
+      summary: Create a new template (max 50 per user)
+      security: [{ supabaseAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, subject, body]
+              properties:
+                name:
+                  type: string
+                  minLength: 1
+                  maxLength: 100
+                subject:
+                  type: string
+                  minLength: 1
+                  maxLength: 200
+                body:
+                  type: string
+                  minLength: 1
+                  maxLength: 10000
+      responses:
+        "201":
+          description: Template created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EmailTemplate"
+        "400":
+          description: Validation error or template cap (50) reached
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        "401":
+          description: Not authenticated
+        "403":
+          description: Free plan — upgrade required
+
+  /api/templates/{id}:
+    delete:
+      summary: Delete a template owned by the authenticated user
+      security: [{ supabaseAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+        "401":
+          description: Not authenticated
+        "403":
+          description: Not owner or Free plan
+        "404":
+          description: Template not found
+
+components:
+  schemas:
+    EmailTemplate:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        subject:
+          type: string
+        body:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+    UpgradeRequired:
+      type: object
+      properties:
+        error:
+          type: string
+          example: "Pro plan required"
+        upgrade_required:
+          type: boolean
+          example: true
+
+  securitySchemes:
+    supabaseAuth:
+      type: http
+      scheme: bearer

@@ -1,7 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import type { Plan } from "@/types";
 
 const NAV_ITEMS = [
   {
@@ -68,8 +70,38 @@ const NAV_ITEMS = [
   },
 ];
 
-export default function Sidebar({ onNavClick }: { onNavClick?: () => void } = {}) {
+const PLAN_LABEL: Record<Plan, string> = {
+  free: "Free Plan",
+  pro: "Pro Plan",
+  business: "Business",
+};
+
+export default function Sidebar({
+  onNavClick,
+  plan = "free",
+}: {
+  onNavClick?: () => void;
+  plan?: Plan;
+} = {}) {
   const pathname = usePathname();
+  const [upgrading, setUpgrading] = useState(false);
+  const [portalLoading, setPortalLoading] = useState(false);
+
+  async function handleUpgrade() {
+    setUpgrading(true);
+    const res = await fetch("/api/payments/checkout", { method: "POST" });
+    const data = await res.json();
+    setUpgrading(false);
+    if (data.url) window.location.href = data.url;
+  }
+
+  async function handleManagePlan() {
+    setPortalLoading(true);
+    const res = await fetch("/api/payments/portal", { method: "POST" });
+    const data = await res.json();
+    setPortalLoading(false);
+    if (data.url) window.open(data.url, "_blank");
+  }
 
   return (
     <aside
@@ -80,7 +112,7 @@ export default function Sidebar({ onNavClick }: { onNavClick?: () => void } = {}
       <div className="mb-6 px-4">
         <Link href="/dashboard" className="flex items-center gap-2.5 group">
           <div
-            className="flex h-7 w-7 items-center justify-center rounded-lg text-xs font-extrabold text-white transition-transform group-hover:scale-105"
+            className="flex h-8 w-8 items-center justify-center rounded-xl text-xs font-extrabold text-white transition-transform group-hover:scale-105 animate-logo-glow"
             style={{ background: "linear-gradient(135deg,#2563eb,#4f46e5)" }}
           >
             M
@@ -93,14 +125,14 @@ export default function Sidebar({ onNavClick }: { onNavClick?: () => void } = {}
 
       {/* Label */}
       <div className="px-4 mb-2">
-        <span className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.25)" }}>
+        <span className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.22)" }}>
           Navigation
         </span>
       </div>
 
       {/* Nav items */}
       <nav className="flex-1 px-3 space-y-0.5">
-        {NAV_ITEMS.map((item, i) => {
+        {NAV_ITEMS.map((item) => {
           const isActive =
             item.href === "/dashboard"
               ? pathname === "/dashboard"
@@ -114,9 +146,10 @@ export default function Sidebar({ onNavClick }: { onNavClick?: () => void } = {}
               style={
                 isActive
                   ? {
-                      background: "linear-gradient(90deg, rgba(37,99,235,0.22), rgba(79,70,229,0.18))",
+                      background: "linear-gradient(90deg, rgba(37,99,235,0.28), rgba(79,70,229,0.22))",
                       color: "#fff",
                       borderLeft: "2px solid #4f46e5",
+                      boxShadow: "inset 0 0 20px rgba(99,102,241,0.18), 0 0 14px rgba(99,102,241,0.1)",
                     }
                   : {
                       color: "rgba(255,255,255,0.45)",
@@ -137,8 +170,8 @@ export default function Sidebar({ onNavClick }: { onNavClick?: () => void } = {}
               }}
             >
               <span
-                className="transition-transform duration-150 group-hover:scale-110"
-                style={isActive ? { color: "#818cf8" } : {}}
+                className={`transition-transform duration-150 group-hover:scale-110 ${isActive ? "animate-icon-glow" : ""}`}
+                style={isActive ? { color: "#818cf8", borderRadius: "6px" } : {}}
               >
                 {item.icon}
               </span>
@@ -148,12 +181,62 @@ export default function Sidebar({ onNavClick }: { onNavClick?: () => void } = {}
         })}
       </nav>
 
-      {/* Bottom accent */}
-      <div className="mx-4 mt-4 rounded-xl p-3" style={{ background: "rgba(79,70,229,0.12)", border: "1px solid rgba(79,70,229,0.2)" }}>
-        <p className="text-xs font-semibold text-indigo-300 mb-0.5">Pro tip</p>
-        <p className="text-xs leading-relaxed" style={{ color: "rgba(255,255,255,0.4)" }}>
-          Upload a PDF to auto-generate emails in seconds.
-        </p>
+      {/* Plan CTA box */}
+      <div className="mx-3 mt-4 px-1">
+        {plan === "free" ? (
+          <div
+            className="rounded-xl p-3.5 animate-fade-in"
+            style={{ background: "rgba(79,70,229,0.13)", border: "1px solid rgba(79,70,229,0.28)" }}
+          >
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-xs font-bold text-indigo-300">Free Plan</span>
+              <span
+                className="rounded-full px-1.5 py-0.5 text-[9px] font-bold"
+                style={{ background: "rgba(79,70,229,0.3)", color: "#a5b4fc" }}
+              >
+                LIMITED
+              </span>
+            </div>
+            <p className="text-[11px] leading-relaxed mb-3" style={{ color: "rgba(255,255,255,0.38)" }}>
+              10 emails · 3 clients per month
+            </p>
+            <button
+              onClick={() => { onNavClick?.(); handleUpgrade(); }}
+              disabled={upgrading}
+              className="flex w-full items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-bold text-white transition-all animate-btn-glow disabled:opacity-60"
+              style={{ background: "linear-gradient(135deg,#2563eb,#4f46e5)" }}
+            >
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+              {upgrading ? "Opening…" : "Upgrade to Pro"}
+            </button>
+          </div>
+        ) : (
+          <div
+            className="rounded-xl p-3.5 animate-badge-glow"
+            style={{ background: "rgba(79,70,229,0.15)", border: "1px solid rgba(99,102,241,0.4)" }}
+          >
+            <div className="flex items-center gap-1.5 mb-1">
+              <span className="text-xs font-bold" style={{ color: "#818cf8" }}>⚡ {PLAN_LABEL[plan]}</span>
+            </div>
+            <p className="text-[11px] mb-2.5" style={{ color: "rgba(255,255,255,0.38)" }}>
+              Unlimited emails &amp; clients
+            </p>
+            <button
+              onClick={() => { onNavClick?.(); handleManagePlan(); }}
+              disabled={portalLoading}
+              className="flex w-full items-center justify-center gap-1.5 rounded-lg py-1.5 text-xs font-semibold transition-all hover:-translate-y-0.5 disabled:opacity-60"
+              style={{
+                background: "rgba(99,102,241,0.18)",
+                border: "1px solid rgba(99,102,241,0.35)",
+                color: "#a5b4fc",
+              }}
+            >
+              {portalLoading ? "Loading…" : "Manage Plan"}
+            </button>
+          </div>
+        )}
       </div>
     </aside>
   );

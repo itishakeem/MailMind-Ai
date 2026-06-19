@@ -16,10 +16,13 @@ export class GmailSendError extends Error {
 }
 
 // Builds an RFC 2822 email message encoded in base64url for the Gmail API.
+// CR and LF are stripped from header values to prevent email header injection.
 function buildRawMessage(to: string, subject: string, body: string): string {
+  const safeHeader = (v: string) => v.replace(/[\r\n]/g, "");
+
   const message = [
-    `To: ${to}`,
-    `Subject: ${subject}`,
+    `To: ${safeHeader(to)}`,
+    `Subject: ${safeHeader(subject)}`,
     "Content-Type: text/plain; charset=utf-8",
     "MIME-Version: 1.0",
     "",
@@ -89,7 +92,7 @@ export async function sendGmail(
 
   const { data: profile, error } = await supabase
     .from("users")
-    .select("gmail_token")
+    .select("gmail_token, email_signature, plan")
     .eq("id", userId)
     .single();
 
@@ -98,6 +101,12 @@ export async function sendGmail(
   }
 
   let tokenData = decryptToken<GmailTokenData>(profile.gmail_token);
+
+  // Append email signature for Pro/Business users
+  const isPro = profile.plan === "pro" || profile.plan === "business";
+  if (isPro && profile.email_signature?.trim()) {
+    body = `${body}\n\n${profile.email_signature.trim()}`;
+  }
 
   // Proactively refresh if token expires within 5 minutes
   if (tokenData.expires_at && tokenData.expires_at - Date.now() < 5 * 60 * 1000) {

@@ -1,0 +1,89 @@
+openapi: "3.0.0"
+info:
+  title: CSV Export API
+  version: "1.0"
+  description: One-click CSV downloads for Pro users
+
+paths:
+  /api/export/emails:
+    get:
+      summary: Download all emails as RFC 4180 CSV
+      security: [{ supabaseAuth: [] }]
+      responses:
+        "200":
+          description: CSV file download
+          headers:
+            Content-Disposition:
+              schema:
+                type: string
+                example: 'attachment; filename="mailmind-emails-2026-06-19.csv"'
+            Content-Type:
+              schema:
+                type: string
+                example: "text/csv; charset=utf-8"
+          content:
+            text/csv:
+              schema:
+                type: string
+                description: |
+                  Columns: Date, Client Name, Client Email, Subject, Status, Email Type
+                  UTF-8 with BOM for Excel compatibility
+                  RFC 4180 field quoting
+        "401":
+          description: Not authenticated
+        "403":
+          description: Free plan — upgrade required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UpgradeRequired"
+
+  /api/export/clients:
+    get:
+      summary: Download all clients as RFC 4180 CSV
+      security: [{ supabaseAuth: [] }]
+      responses:
+        "200":
+          description: CSV file download
+          headers:
+            Content-Disposition:
+              schema:
+                type: string
+                example: 'attachment; filename="mailmind-clients-2026-06-19.csv"'
+            Content-Type:
+              schema:
+                type: string
+                example: "text/csv; charset=utf-8"
+          content:
+            text/csv:
+              schema:
+                type: string
+                description: |
+                  Columns: Name, Email, Phone, Company, Address, Added Date
+                  UTF-8 with BOM for Excel compatibility
+                  RFC 4180 field quoting
+        "401":
+          description: Not authenticated
+        "403":
+          description: Free plan — upgrade required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UpgradeRequired"
+
+components:
+  schemas:
+    UpgradeRequired:
+      type: object
+      properties:
+        error:
+          type: string
+          example: "Pro plan required"
+        upgrade_required:
+          type: boolean
+          example: true
+
+  securitySchemes:
+    supabaseAuth:
+      type: http
+      scheme: bearer
