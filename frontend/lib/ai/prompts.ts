@@ -75,18 +75,3 @@ Reply with JSON only:
 {"subject":"...","body":"..."}`;
 }
 
-// Monthly dashboard summary prompt — plain text response
-export function buildMonthlySummaryPrompt(stats: {
-  emailsSent: number;
-  topClients: string[];
-  commonType: string;
-}): string {
-  return `Write a 2–3 sentence monthly summary for a freelancer's email dashboard.
-
-Data:
-- Emails sent this month: ${stats.emailsSent}
-- Most active clients: ${stats.topClients.slice(0, 3).join(", ") || "none yet"}
-- Most common email type: ${stats.commonType || "general"}
-
-Write in second person ("You sent…"). Be concise and encouraging. Under 60 words. Plain text only.`;
-}

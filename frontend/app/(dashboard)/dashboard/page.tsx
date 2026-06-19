@@ -5,7 +5,6 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import StatCard from "@/components/dashboard/StatCard";
 import ClientActivityTable from "@/components/dashboard/ClientActivityTable";
-import MonthlySummary from "@/components/dashboard/MonthlySummary";
 import GmailConnectBanner from "@/components/ui/GmailConnectBanner";
 import ProBadge from "@/components/ui/ProBadge";
 import Skeleton from "@/components/ui/Skeleton";
@@ -343,10 +342,6 @@ function DashboardContent() {
         </div>
       </FadeSection>
 
-      {/* AI Monthly Summary */}
-      <FadeSection delay={320}>
-        <MonthlySummary />
-      </FadeSection>
     </div>
   );
 }

@@ -3,7 +3,6 @@ import { z } from "zod";
 import {
   buildDetectTypePrompt,
   buildGenerateEmailPrompt,
-  buildMonthlySummaryPrompt,
 } from "@/lib/ai/prompts";
 import type { EmailType, Tone } from "@/types";
 
@@ -187,18 +186,3 @@ export async function detectEmailType(text: string): Promise<{
   }
 }
 
-export async function generateMonthlySummary(stats: {
-  emailsSent: number;
-  topClients: string[];
-  commonType: string;
-}): Promise<string> {
-  const prompt = buildMonthlySummaryPrompt(stats);
-
-  try {
-    const { content } = await callFreeModel(prompt, 150);
-    return content.trim();
-  } catch (err) {
-    if (err instanceof AIUnavailableError) throw err;
-    throw new AIUnavailableError();
-  }
-}
