@@ -36,17 +36,17 @@ const FEATURES = [
 
 const PRICING = [
   {
-    name: "Free", price: "Rs. 0", period: "forever", highlight: false,
+    name: "Free", price: "$0", period: "forever", highlight: false,
     features: ["10 emails / month", "3 clients", "Basic AI generation", "Gmail connect"],
     cta: "Get Started",
   },
   {
-    name: "Pro", price: "Rs. 999", period: "/ month", highlight: true,
+    name: "Pro", price: "$9.99", period: "/ month", highlight: true,
     features: ["Unlimited emails", "Unlimited clients", "PDF upload & AI detection", "Scheduled delivery", "Full email history", "Tone adjustment"],
     cta: "Start Pro",
   },
   {
-    name: "Business", price: "Rs. 2,499", period: "/ month", highlight: false,
+    name: "Business", price: "$19.99", period: "/ month", highlight: false,
     features: ["Everything in Pro", "Up to 5 team members", "Priority support", "Advanced analytics", "Custom email signature"],
     cta: "Start Business",
   },
@@ -62,58 +62,101 @@ const TESTIMONIALS = [
 function DashboardMockup() {
   return (
     <div
-      className="w-full max-w-2xl mx-auto rounded-xl overflow-hidden shadow-2xl"
-      style={{ border: `1px solid ${BORD}` }}
+      className="w-full max-w-3xl mx-auto rounded-2xl overflow-hidden animate-scale-in"
+      style={{ border: `1px solid ${BORD}`, boxShadow: "0 32px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.04)" }}
     >
       {/* Browser chrome */}
-      <div className="flex items-center gap-1.5 px-4 py-3" style={{ background: "#0D0D14" }}>
-        <span className="h-3 w-3 rounded-full bg-red-500/70" />
-        <span className="h-3 w-3 rounded-full bg-amber-400/70" />
-        <span className="h-3 w-3 rounded-full bg-green-500/70" />
-        <div className="mx-3 flex-1 rounded px-3 py-1 text-xs" style={{ background: SURF, color: SEC }}>
+      <div className="flex items-center gap-1.5 px-4 py-3" style={{ background: "#08080f", borderBottom: `1px solid ${BORD}` }}>
+        <span className="h-2.5 w-2.5 rounded-full bg-red-500/80" />
+        <span className="h-2.5 w-2.5 rounded-full bg-amber-400/80" />
+        <span className="h-2.5 w-2.5 rounded-full bg-green-500/80" />
+        <div className="mx-3 flex-1 rounded-md px-3 py-1 text-xs flex items-center gap-2" style={{ background: SURF, color: SEC }}>
+          <span className="h-1.5 w-1.5 rounded-full bg-green-400" />
           app.mailmind.ai/dashboard
         </div>
       </div>
 
       {/* App shell */}
-      <div className="flex h-56" style={{ background: BG }}>
+      <div className="flex h-72" style={{ background: BG }}>
         {/* Sidebar */}
-        <div className="w-36 shrink-0 border-r flex flex-col py-3 gap-1 px-2" style={{ borderColor: BORD, background: "#0D0D14" }}>
-          {["Dashboard", "Compose", "Clients", "Scheduled", "Settings"].map((label, i) => (
+        <div className="w-40 shrink-0 border-r flex flex-col py-4 gap-0.5 px-2.5" style={{ borderColor: BORD, background: "#0D0D14" }}>
+          <div className="flex items-center gap-2 px-2 mb-4">
+            <div className="h-5 w-5 rounded-md flex items-center justify-center text-[9px] font-black text-white" style={{ background: "linear-gradient(135deg,#2563eb,#4f46e5)" }}>M</div>
+            <span className="text-[11px] font-bold" style={{ color: "rgba(255,255,255,0.7)" }}>MailMind AI</span>
+          </div>
+          {[
+            { label: "Dashboard", active: true },
+            { label: "Compose", active: false },
+            { label: "Clients", active: false },
+            { label: "Scheduled", active: false },
+            { label: "Settings", active: false },
+          ].map(({ label, active }) => (
             <div
               key={label}
-              className="rounded-lg px-2 py-1.5 text-xs font-medium"
-              style={i === 0
-                ? { background: `${ACC}22`, color: "#818cf8" }
-                : { color: SEC }}
+              className="rounded-lg px-2.5 py-1.5 text-[11px] font-medium"
+              style={active
+                ? { background: `${ACC}22`, color: "#818cf8", borderLeft: "2px solid #4f46e5" }
+                : { color: "rgba(255,255,255,0.35)", borderLeft: "2px solid transparent" }}
             >
               {label}
             </div>
           ))}
+          <div className="mt-auto mx-1 rounded-xl p-2.5" style={{ background: "rgba(79,70,229,0.15)", border: "1px solid rgba(79,70,229,0.25)" }}>
+            <p className="text-[9px] font-bold text-indigo-300 mb-1">Free Plan</p>
+            <div className="rounded-md py-1 text-center text-[9px] font-bold text-white" style={{ background: "linear-gradient(135deg,#2563eb,#4f46e5)" }}>
+              Upgrade ⚡
+            </div>
+          </div>
         </div>
 
         {/* Main content */}
-        <div className="flex-1 p-4">
-          <div className="mb-3 text-xs font-semibold" style={{ color: TXT }}>Dashboard</div>
+        <div className="flex-1 p-4 overflow-hidden">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <div className="text-xs font-bold mb-0.5" style={{ color: TXT }}>Welcome back, Ahmed</div>
+              <div className="text-[10px]" style={{ color: SEC }}>Your activity overview</div>
+            </div>
+            <div className="rounded-lg px-3 py-1.5 text-[10px] font-bold text-white" style={{ background: "linear-gradient(135deg,#2563eb,#4f46e5)" }}>
+              + Compose
+            </div>
+          </div>
           {/* Stat cards */}
           <div className="grid grid-cols-3 gap-2 mb-3">
             {[
-              { label: "Sent", value: "24" },
-              { label: "Scheduled", value: "3" },
-              { label: "Clients", value: "8" },
+              { label: "Emails Sent", value: "24", color: "#3b82f6" },
+              { label: "Scheduled", value: "3",  color: "#f59e0b" },
+              { label: "Clients",   value: "8",  color: "#10b981" },
             ].map(s => (
-              <div key={s.label} className="rounded-lg p-2" style={{ background: SURF, border: `1px solid ${BORD}` }}>
-                <div className="text-xs mb-1" style={{ color: SEC }}>{s.label}</div>
-                <div className="text-base font-bold" style={{ color: TXT }}>{s.value}</div>
+              <div key={s.label} className="rounded-xl p-2.5" style={{ background: SURF, border: `1px solid ${BORD}` }}>
+                <div className="text-[9px] mb-1" style={{ color: SEC }}>{s.label}</div>
+                <div className="text-lg font-extrabold" style={{ color: s.color }}>{s.value}</div>
               </div>
             ))}
           </div>
+          {/* Usage ring mini */}
+          <div className="rounded-xl p-3 mb-2" style={{ background: SURF, border: `1px solid ${BORD}` }}>
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[9px] font-semibold" style={{ color: SEC }}>Monthly Usage</span>
+              <span className="text-[9px] font-bold" style={{ color: ACC }}>7 / 10 emails</span>
+            </div>
+            <div className="h-1.5 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.08)" }}>
+              <div className="h-full rounded-full" style={{ width: "70%", background: "linear-gradient(90deg,#3b82f6,#6366f1)" }} />
+            </div>
+          </div>
           {/* Activity rows */}
-          <div className="rounded-lg overflow-hidden" style={{ background: SURF, border: `1px solid ${BORD}` }}>
-            {["Ayesha Tariq", "Rohan Mehta"].map((name, i) => (
-              <div key={name} className="flex items-center justify-between px-3 py-2 text-xs" style={{ borderTop: i > 0 ? `1px solid ${BORD}` : "none" }}>
-                <span style={{ color: SEC }}>{name}</span>
-                <span className="rounded-full px-2 py-0.5 text-xs" style={{ background: `${ACC}22`, color: "#818cf8" }}>Sent</span>
+          <div className="rounded-xl overflow-hidden" style={{ background: SURF, border: `1px solid ${BORD}` }}>
+            {[{ name: "Sarah Johnson", type: "Invoice" }, { name: "Mike Chen", type: "Follow-up" }].map((r, i) => (
+              <div key={r.name} className="flex items-center justify-between px-3 py-2 text-[10px]" style={{ borderTop: i > 0 ? `1px solid ${BORD}` : "none" }}>
+                <div className="flex items-center gap-2">
+                  <div className="h-5 w-5 rounded-full flex items-center justify-center text-[8px] font-bold text-white" style={{ background: "linear-gradient(135deg,#4f46e5,#7c3aed)" }}>
+                    {r.name[0]}
+                  </div>
+                  <span style={{ color: TXT }}>{r.name}</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="rounded-full px-1.5 py-0.5" style={{ background: "rgba(16,185,129,0.15)", color: "#34d399", fontSize: "8px" }}>Sent</span>
+                  <span style={{ color: "rgba(255,255,255,0.3)" }}>{r.type}</span>
+                </div>
               </div>
             ))}
           </div>
@@ -126,52 +169,66 @@ function DashboardMockup() {
 /* ─── Page ────────────────────────────────────────────────────── */
 export default function HomePage() {
   return (
-    <div style={{ background: BG, color: TXT, minHeight: "100vh" }}>
+    <div style={{
+      backgroundColor: BG,
+      color: TXT,
+      minHeight: "100vh",
+      backgroundImage: "linear-gradient(rgba(255,255,255,0.018) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.018) 1px, transparent 1px)",
+      backgroundSize: "60px 60px",
+    }}>
       <MarketingNav />
 
       {/* ── Hero ──────────────────────────────────────────────── */}
-      <section className="mx-auto max-w-6xl px-4 sm:px-6 pt-20 pb-16 text-center">
+      <section className="relative mx-auto max-w-6xl px-4 sm:px-6 pt-24 pb-20 text-center overflow-hidden">
+        {/* Ambient gradient orbs */}
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
+          <div className="absolute -top-40 left-1/2 -translate-x-1/2 h-[720px] w-[720px] rounded-full opacity-30 blur-3xl animate-float"
+            style={{ background: "radial-gradient(circle,#4f46e5,transparent 65%)" }} />
+          <div className="absolute top-60 -left-32 h-[480px] w-[480px] rounded-full opacity-20 blur-3xl animate-float" style={{ background: "radial-gradient(circle,#2563eb,transparent 65%)", animationDelay: "2s" }} />
+          <div className="absolute top-40 -right-32 h-[480px] w-[480px] rounded-full opacity-20 blur-3xl animate-float" style={{ background: "radial-gradient(circle,#7c3aed,transparent 65%)", animationDelay: "4s" }} />
+          <div className="absolute bottom-10 left-1/2 -translate-x-1/2 h-[240px] w-[600px] rounded-full opacity-15 blur-3xl"
+            style={{ background: "radial-gradient(ellipse,#6366f1,transparent 70%)" }} />
+        </div>
+
         <div
-          className="mb-5 inline-flex items-center gap-2 rounded-full border px-4 py-1.5 text-xs font-medium"
-          style={{ borderColor: BORD, color: SEC }}
+          className="mb-5 inline-flex items-center gap-2 rounded-full border px-4 py-1.5 text-xs font-medium animate-fade-in-up animate-badge-glow"
+          style={{ borderColor: "rgba(99,102,241,0.4)", color: "#a5b4fc", background: "rgba(99,102,241,0.1)" }}
         >
-          <span className="h-1.5 w-1.5 rounded-full bg-green-400" />
+          <span className="h-1.5 w-1.5 rounded-full bg-green-400 animate-pulse" />
           Free plan available — no credit card required
         </div>
 
         <h1
-          className="mx-auto mb-6 max-w-3xl text-4xl sm:text-6xl font-semibold leading-tight"
-          style={{ color: TXT, letterSpacing: "-0.02em" }}
+          className="mx-auto mb-6 max-w-3xl text-4xl sm:text-6xl font-bold leading-tight animate-fade-in-up delay-100"
+          style={{ color: TXT, letterSpacing: "-0.03em" }}
         >
           Your Work. Your Email.{" "}
-          <span style={{ color: ACC }}>AI-Powered.</span>
+          <span className="gradient-text glow-text animate-text-glow">AI-Powered.</span>
         </h1>
 
-        <p className="mx-auto mb-10 max-w-xl text-base sm:text-lg leading-relaxed" style={{ color: SEC }}>
+        <p className="mx-auto mb-10 max-w-xl text-base sm:text-lg leading-relaxed animate-fade-in-up delay-200" style={{ color: SEC }}>
           Describe your work, upload a PDF, or paste your notes — MailMind AI writes a
           professional email and sends it from your own Gmail in seconds.
         </p>
 
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 animate-fade-in-up delay-300">
           <Link
             href="/auth/signup"
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-lg px-6 py-3 text-sm font-medium text-white transition-colors"
-            style={{ background: ACC }}
-            onMouseEnter={e => (e.currentTarget.style.background = "#4F46E5")}
-            onMouseLeave={e => (e.currentTarget.style.background = ACC)}
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl px-7 py-3.5 text-sm font-bold text-white transition-all animate-btn-glow"
+            style={{ background: "linear-gradient(135deg,#2563eb,#4f46e5)" }}
           >
             Get Started Free <ChevronRight className="h-4 w-4" />
           </Link>
           <a
             href="#features"
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-lg border px-6 py-3 text-sm font-medium transition-colors"
-            style={{ borderColor: BORD, color: SEC }}
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl border px-7 py-3.5 text-sm font-medium transition-all hover:-translate-y-0.5"
+            style={{ borderColor: "rgba(255,255,255,0.12)", color: SEC, background: "rgba(255,255,255,0.04)" }}
             onMouseEnter={e => {
-              (e.currentTarget as HTMLAnchorElement).style.borderColor = "#6366F1";
+              (e.currentTarget as HTMLAnchorElement).style.borderColor = "rgba(99,102,241,0.5)";
               (e.currentTarget as HTMLAnchorElement).style.color = TXT;
             }}
             onMouseLeave={e => {
-              (e.currentTarget as HTMLAnchorElement).style.borderColor = BORD;
+              (e.currentTarget as HTMLAnchorElement).style.borderColor = "rgba(255,255,255,0.12)";
               (e.currentTarget as HTMLAnchorElement).style.color = SEC;
             }}
           >
@@ -179,7 +236,17 @@ export default function HomePage() {
           </a>
         </div>
 
-        <div className="mt-14">
+        {/* Trust bar */}
+        <div className="mt-10 flex items-center justify-center gap-6 animate-fade-in-up delay-400">
+          {["No credit card", "Cancel anytime", "Gmail-native sending"].map(t => (
+            <span key={t} className="flex items-center gap-1.5 text-xs" style={{ color: "rgba(255,255,255,0.3)" }}>
+              <Check className="h-3 w-3" style={{ color: "#22c55e" }} />
+              {t}
+            </span>
+          ))}
+        </div>
+
+        <div className="mt-14 animate-fade-in-up delay-500">
           <DashboardMockup />
         </div>
       </section>
@@ -188,22 +255,26 @@ export default function HomePage() {
       <section className="py-20 px-4 sm:px-6 border-y" style={{ borderColor: BORD }}>
         <div className="mx-auto max-w-6xl">
           <div className="mb-12 text-center">
-            <h2 className="text-2xl sm:text-3xl font-semibold mb-3" style={{ color: TXT, letterSpacing: "-0.02em" }}>
+            <h2 className="gradient-text text-2xl sm:text-3xl font-semibold mb-3" style={{ letterSpacing: "-0.02em" }}>
               How It Works
             </h2>
             <p className="text-sm" style={{ color: SEC }}>Four steps from description to delivered email.</p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {STEPS.map(({ icon: Icon, step, title, desc }) => (
-              <div key={step} className="rounded-xl p-5 flex flex-col gap-3" style={{ background: SURF, border: `1px solid ${BORD}` }}>
+            {STEPS.map(({ icon: Icon, step, title, desc }, i) => (
+              <div
+                key={step}
+                className="rounded-2xl p-5 flex flex-col gap-3 neon-card animate-fade-in-up"
+                style={{ background: SURF, animationDelay: `${i * 100}ms` }}
+              >
                 <div className="flex items-center gap-3">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg" style={{ background: `${ACC}20` }}>
-                    <Icon className="h-4 w-4" style={{ color: ACC }} />
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl animate-icon-glow" style={{ background: `${ACC}20` }}>
+                    <Icon className="h-5 w-5" style={{ color: ACC }} />
                   </div>
-                  <span className="text-xs font-bold" style={{ color: ACC }}>{step}</span>
+                  <span className="text-lg font-black" style={{ color: `${ACC}80` }}>{step}</span>
                 </div>
-                <p className="text-sm font-semibold" style={{ color: TXT }}>{title}</p>
+                <p className="text-sm font-bold" style={{ color: TXT }}>{title}</p>
                 <p className="text-xs leading-relaxed" style={{ color: SEC }}>{desc}</p>
               </div>
             ))}
@@ -215,25 +286,23 @@ export default function HomePage() {
       <section id="features" className="py-20 px-4 sm:px-6">
         <div className="mx-auto max-w-6xl">
           <div className="mb-12 text-center">
-            <h2 className="text-2xl sm:text-3xl font-semibold mb-3" style={{ color: TXT, letterSpacing: "-0.02em" }}>
+            <h2 className="gradient-text text-2xl sm:text-3xl font-semibold mb-3" style={{ letterSpacing: "-0.02em" }}>
               Everything You Need
             </h2>
             <p className="text-sm" style={{ color: SEC }}>Built specifically for South Asian freelancers and small teams.</p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {FEATURES.map(({ icon: Icon, title, desc }) => (
+            {FEATURES.map(({ icon: Icon, title, desc }, i) => (
               <div
                 key={title}
-                className="rounded-xl p-5 transition-colors"
-                style={{ background: SURF, border: `1px solid ${BORD}` }}
-                onMouseEnter={e => (e.currentTarget.style.borderColor = "#6366F1")}
-                onMouseLeave={e => (e.currentTarget.style.borderColor = BORD)}
+                className="rounded-2xl p-6 neon-card animate-fade-in-up"
+                style={{ background: SURF, animationDelay: `${i * 80}ms` }}
               >
-                <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-lg" style={{ background: `${ACC}20` }}>
-                  <Icon className="h-4 w-4" style={{ color: ACC }} />
+                <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl animate-icon-glow" style={{ background: `${ACC}18` }}>
+                  <Icon className="h-5 w-5" style={{ color: ACC }} />
                 </div>
-                <p className="mb-1.5 text-sm font-semibold" style={{ color: TXT }}>{title}</p>
+                <p className="mb-2 text-sm font-bold" style={{ color: TXT }}>{title}</p>
                 <p className="text-xs leading-relaxed" style={{ color: SEC }}>{desc}</p>
               </div>
             ))}
@@ -245,50 +314,53 @@ export default function HomePage() {
       <section id="pricing" className="py-20 px-4 sm:px-6 border-t" style={{ borderColor: BORD }}>
         <div className="mx-auto max-w-5xl">
           <div className="mb-12 text-center">
-            <h2 className="text-2xl sm:text-3xl font-semibold mb-3" style={{ color: TXT, letterSpacing: "-0.02em" }}>
+            <h2 className="gradient-text text-2xl sm:text-3xl font-semibold mb-3" style={{ letterSpacing: "-0.02em" }}>
               Simple Pricing
             </h2>
             <p className="text-sm" style={{ color: SEC }}>No hidden fees. Cancel anytime.</p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-            {PRICING.map(plan => (
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 items-start">
+            {PRICING.map((plan, i) => (
               <div
                 key={plan.name}
-                className="rounded-xl p-6 flex flex-col"
+                className={`rounded-2xl flex flex-col ${plan.highlight ? "animate-pro-entry-glow" : "animate-fade-in-up neon-card"}`}
                 style={{
-                  background: plan.highlight ? `${ACC}10` : SURF,
-                  border: `1px solid ${plan.highlight ? ACC : BORD}`,
-                  boxShadow: plan.highlight ? `0 0 32px ${ACC}22` : "none",
+                  padding: plan.highlight ? "28px 24px" : "24px",
+                  background: plan.highlight ? `${ACC}12` : SURF,
+                  border: plan.highlight ? "1px solid rgba(99,102,241,0.65)" : undefined,
+                  animationDelay: plan.highlight ? undefined : `${i * 100}ms`,
                 }}
               >
                 {plan.highlight && (
                   <span
-                    className="mb-3 self-start rounded-full px-2.5 py-0.5 text-xs font-semibold"
-                    style={{ background: ACC, color: "#fff" }}
+                    className="mb-3 self-start rounded-full px-3 py-1 text-xs font-bold"
+                    style={{ background: "linear-gradient(135deg,#2563eb,#4f46e5)", color: "#fff" }}
                   >
-                    Most Popular
+                    ⚡ Most Popular
                   </span>
                 )}
-                <p className="text-sm font-semibold mb-1" style={{ color: TXT }}>{plan.name}</p>
-                <div className="mb-5">
-                  <span className="text-3xl font-bold" style={{ color: TXT }}>{plan.price}</span>
-                  <span className="text-sm ml-1" style={{ color: SEC }}>{plan.period}</span>
+                <p className="text-base font-bold mb-1" style={{ color: TXT }}>{plan.name}</p>
+                <div className="mb-5 flex items-end gap-1">
+                  <span className="text-4xl font-black" style={{ color: plan.highlight ? "#818cf8" : TXT }}>{plan.price}</span>
+                  <span className="text-sm mb-1" style={{ color: SEC }}>{plan.period}</span>
                 </div>
-                <ul className="flex-1 space-y-2.5 mb-6">
+                <ul className="flex-1 space-y-3 mb-6">
                   {plan.features.map(f => (
-                    <li key={f} className="flex items-start gap-2 text-xs" style={{ color: SEC }}>
-                      <Check className="h-3.5 w-3.5 shrink-0 mt-0.5" style={{ color: "#22c55e" }} />
+                    <li key={f} className="flex items-start gap-2 text-sm" style={{ color: SEC }}>
+                      <Check className="h-4 w-4 shrink-0 mt-0.5" style={{ color: "#22c55e" }} />
                       {f}
                     </li>
                   ))}
                 </ul>
                 <Link
                   href="/auth/signup"
-                  className="block rounded-lg py-2.5 text-center text-sm font-medium text-white transition-colors"
-                  style={{ background: plan.highlight ? ACC : "#1E1E2A" }}
-                  onMouseEnter={e => (e.currentTarget.style.background = plan.highlight ? "#4F46E5" : "#2a2a38")}
-                  onMouseLeave={e => (e.currentTarget.style.background = plan.highlight ? ACC : "#1E1E2A")}
+                  className="block rounded-xl py-3 text-center text-sm font-bold text-white transition-all hover:-translate-y-0.5"
+                  style={{
+                    background: plan.highlight ? "linear-gradient(135deg,#2563eb,#4f46e5)" : "rgba(255,255,255,0.06)",
+                    boxShadow: plan.highlight ? "0 8px 24px rgba(79,70,229,0.45)" : "none",
+                    border: plan.highlight ? "none" : `1px solid ${BORD}`,
+                  }}
                 >
                   {plan.cta}
                 </Link>
@@ -302,7 +374,7 @@ export default function HomePage() {
       <section className="py-20 px-4 sm:px-6 border-t" style={{ borderColor: BORD }}>
         <div className="mx-auto max-w-6xl">
           <div className="mb-12 text-center">
-            <h2 className="text-2xl sm:text-3xl font-semibold mb-3" style={{ color: TXT, letterSpacing: "-0.02em" }}>
+            <h2 className="gradient-text text-2xl sm:text-3xl font-semibold mb-3" style={{ letterSpacing: "-0.02em" }}>
               What Freelancers Say
             </h2>
             <p className="text-sm" style={{ color: SEC }}>Real feedback from South Asian professionals.</p>
@@ -310,7 +382,7 @@ export default function HomePage() {
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
             {TESTIMONIALS.map(({ name, role, quote }) => (
-              <div key={name} className="rounded-xl p-6 flex flex-col gap-4" style={{ background: SURF, border: `1px solid ${BORD}` }}>
+              <div key={name} className="rounded-xl p-6 flex flex-col gap-4 neon-card" style={{ background: SURF }}>
                 <Quote className="h-5 w-5 shrink-0" style={{ color: ACC }} />
                 <p className="flex-1 text-sm leading-relaxed" style={{ color: SEC }}>{quote}</p>
                 <div>
@@ -324,10 +396,14 @@ export default function HomePage() {
       </section>
 
       {/* ── Bottom CTA ────────────────────────────────────────── */}
-      <section className="py-20 px-4 sm:px-6 border-t text-center" style={{ borderColor: BORD }}>
-        <div className="mx-auto max-w-xl">
-          <Inbox className="mx-auto mb-4 h-10 w-10" style={{ color: ACC }} />
-          <h2 className="text-2xl sm:text-3xl font-semibold mb-4" style={{ color: TXT, letterSpacing: "-0.02em" }}>
+      <section className="relative py-20 px-4 sm:px-6 border-t text-center overflow-hidden" style={{ borderColor: BORD }}>
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[400px] w-[600px] rounded-full opacity-20 blur-3xl animate-float"
+            style={{ background: "radial-gradient(ellipse,#4f46e5,transparent 70%)" }} />
+        </div>
+        <div className="relative mx-auto max-w-xl">
+          <Inbox className="mx-auto mb-4 h-12 w-12 animate-neon-pulse" style={{ color: ACC }} />
+          <h2 className="gradient-text text-2xl sm:text-3xl font-semibold mb-4" style={{ letterSpacing: "-0.02em" }}>
             Start Sending Smarter
           </h2>
           <p className="mb-8 text-sm leading-relaxed" style={{ color: SEC }}>
@@ -336,10 +412,8 @@ export default function HomePage() {
           </p>
           <Link
             href="/auth/signup"
-            className="inline-flex items-center gap-2 rounded-lg px-6 py-3 text-sm font-medium text-white transition-colors"
-            style={{ background: ACC }}
-            onMouseEnter={e => (e.currentTarget.style.background = "#4F46E5")}
-            onMouseLeave={e => (e.currentTarget.style.background = ACC)}
+            className="inline-flex items-center gap-2 rounded-xl px-7 py-3.5 text-sm font-bold text-white transition-all animate-btn-glow"
+            style={{ background: "linear-gradient(135deg,#2563eb,#4f46e5)" }}
           >
             Get Started Free <ChevronRight className="h-4 w-4" />
           </Link>
