@@ -34,7 +34,7 @@ const FEATURES = [
   { icon: Users,     title: "Client Management",    desc: "Keep a contact book of clients with full email history per client." },
 ];
 
-const PRICING = [
+const PRICING: { name: string; price: string; period: string; highlight: boolean; comingSoon?: boolean; features: string[]; cta: string }[] = [
   {
     name: "Free", price: "$0", period: "forever", highlight: false,
     features: ["10 emails / month", "3 clients", "Basic AI generation", "Gmail connect"],
@@ -46,9 +46,9 @@ const PRICING = [
     cta: "Start Pro",
   },
   {
-    name: "Business", price: "$19.99", period: "/ month", highlight: false,
-    features: ["Everything in Pro", "Up to 5 team members", "Priority support", "Advanced analytics", "Custom email signature"],
-    cta: "Start Business",
+    name: "Business", price: "$19.99", period: "/ month", highlight: false, comingSoon: true,
+    features: ["Everything in Pro", "Up to 5 team members", "Shared client list", "Email open tracking", "Bulk compose", "Priority support"],
+    cta: "Join Waitlist",
   },
 ];
 
@@ -327,9 +327,10 @@ export default function HomePage() {
                 className={`rounded-2xl flex flex-col ${plan.highlight ? "animate-pro-entry-glow" : "animate-fade-in-up neon-card"}`}
                 style={{
                   padding: plan.highlight ? "28px 24px" : "24px",
-                  background: plan.highlight ? `${ACC}12` : SURF,
+                  background: plan.comingSoon ? "rgba(255,255,255,0.02)" : plan.highlight ? `${ACC}12` : SURF,
                   border: plan.highlight ? "1px solid rgba(99,102,241,0.65)" : undefined,
                   animationDelay: plan.highlight ? undefined : `${i * 100}ms`,
+                  opacity: plan.comingSoon ? 0.75 : 1,
                 }}
               >
                 {plan.highlight && (
@@ -340,6 +341,14 @@ export default function HomePage() {
                     ⚡ Most Popular
                   </span>
                 )}
+                {plan.comingSoon && (
+                  <span
+                    className="mb-3 self-start rounded-full px-3 py-1 text-xs font-bold"
+                    style={{ background: "rgba(245,158,11,0.12)", color: "#d97706", border: "1px solid rgba(245,158,11,0.3)" }}
+                  >
+                    Coming Soon
+                  </span>
+                )}
                 <p className="text-base font-bold mb-1" style={{ color: TXT }}>{plan.name}</p>
                 <div className="mb-5 flex items-end gap-1">
                   <span className="text-4xl font-black" style={{ color: plan.highlight ? "#818cf8" : TXT }}>{plan.price}</span>
@@ -348,22 +357,36 @@ export default function HomePage() {
                 <ul className="flex-1 space-y-3 mb-6">
                   {plan.features.map(f => (
                     <li key={f} className="flex items-start gap-2 text-sm" style={{ color: SEC }}>
-                      <Check className="h-4 w-4 shrink-0 mt-0.5" style={{ color: "#22c55e" }} />
+                      <Check className="h-4 w-4 shrink-0 mt-0.5" style={{ color: plan.comingSoon ? "#94a3b8" : "#22c55e" }} />
                       {f}
                     </li>
                   ))}
                 </ul>
-                <Link
-                  href="/auth/signup"
-                  className="block rounded-xl py-3 text-center text-sm font-bold text-white transition-all hover:-translate-y-0.5"
-                  style={{
-                    background: plan.highlight ? "linear-gradient(135deg,#2563eb,#4f46e5)" : "rgba(255,255,255,0.06)",
-                    boxShadow: plan.highlight ? "0 8px 24px rgba(79,70,229,0.45)" : "none",
-                    border: plan.highlight ? "none" : `1px solid ${BORD}`,
-                  }}
-                >
-                  {plan.cta}
-                </Link>
+                {plan.comingSoon ? (
+                  <a
+                    href="mailto:itzhakeem1725@gmail.com?subject=MailMind AI Business Plan Waitlist"
+                    className="block rounded-xl py-3 text-center text-sm font-bold transition-all hover:-translate-y-0.5"
+                    style={{
+                      background: "rgba(245,158,11,0.08)",
+                      border: "1px solid rgba(245,158,11,0.35)",
+                      color: "#d97706",
+                    }}
+                  >
+                    Join Waitlist →
+                  </a>
+                ) : (
+                  <Link
+                    href="/auth/signup"
+                    className="block rounded-xl py-3 text-center text-sm font-bold text-white transition-all hover:-translate-y-0.5"
+                    style={{
+                      background: plan.highlight ? "linear-gradient(135deg,#2563eb,#4f46e5)" : "rgba(255,255,255,0.06)",
+                      boxShadow: plan.highlight ? "0 8px 24px rgba(79,70,229,0.45)" : "none",
+                      border: plan.highlight ? "none" : `1px solid ${BORD}`,
+                    }}
+                  >
+                    {plan.cta}
+                  </Link>
+                )}
               </div>
             ))}
           </div>
