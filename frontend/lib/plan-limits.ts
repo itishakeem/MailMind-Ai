@@ -21,7 +21,6 @@ export async function assertPlanLimit(
   userId: string,
   type: LimitType
 ): Promise<void> {
-  // Fetch user plan
   const { data: user, error } = await supabase
     .from("users")
     .select("plan")
@@ -37,7 +36,7 @@ export async function assertPlanLimit(
 
   if (type === "client_create") {
     const maxClients = limits.max_clients;
-    if (maxClients === null) return; // unlimited
+    if (maxClients === null) return;
 
     const { count, error: countError } = await supabase
       .from("clients")
@@ -60,23 +59,35 @@ export async function assertPlanLimit(
 
   if (type === "email_send") {
     const maxEmails = limits.max_emails_per_month;
-    if (maxEmails === null) return; // unlimited
+    if (maxEmails === null) return;
 
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59).toISOString();
+    const endOfMonth   = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59).toISOString();
 
-    const { count, error: countError } = await supabase
-      .from("emails")
-      .select("id", { count: "exact", head: true })
-      .eq("user_id", userId)
-      .eq("status", "sent")
-      .gte("sent_at", startOfMonth)
-      .lte("sent_at", endOfMonth);
+    // Count sent emails this calendar month + ALL currently queued scheduled emails.
+    // Counting scheduled prevents the race where a user schedules N emails simultaneously
+    // before any of them show as 'sent', bypassing the monthly cap.
+    const [sentResult, scheduledResult] = await Promise.all([
+      supabase
+        .from("emails")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", userId)
+        .eq("status", "sent")
+        .gte("sent_at", startOfMonth)
+        .lte("sent_at", endOfMonth),
+      supabase
+        .from("emails")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", userId)
+        .in("status", ["scheduled", "sending"]),
+    ]);
 
-    if (countError) throw new Error("Could not count sent emails");
+    if (sentResult.error)      throw new Error("Could not count sent emails");
+    if (scheduledResult.error) throw new Error("Could not count scheduled emails");
 
-    const current = count ?? 0;
+    const current = (sentResult.count ?? 0) + (scheduledResult.count ?? 0);
+
     if (current >= maxEmails) {
       throw new PlanLimitReachedError({
         error: `You have reached the ${plan} plan limit of ${maxEmails} emails this month.`,

@@ -33,14 +33,16 @@ export async function POST(request: NextRequest) {
   const filename =
     file instanceof File ? file.name : "upload.pdf";
 
-  if (file.type !== "application/pdf" && !filename.endsWith(".pdf")) {
+  const buffer = Buffer.from(await file.arrayBuffer());
+
+  // Validate PDF magic bytes (%PDF) regardless of browser-reported MIME type or filename
+  const isPdf = buffer.length >= 4 && buffer.slice(0, 4).toString("ascii") === "%PDF";
+  if (!isPdf) {
     return NextResponse.json(
       { error: "Only PDF files are accepted." },
       { status: 400 }
     );
   }
-
-  const buffer = Buffer.from(await file.arrayBuffer());
 
   let extractedText: string;
   try {

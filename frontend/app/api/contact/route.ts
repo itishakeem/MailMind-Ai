@@ -1,8 +1,12 @@
 import { createAdminClient } from "@/lib/supabase/admin";
+import { transporter } from "@/lib/email/mailer";
 import { NextResponse, type NextRequest } from "next/server";
 
 const VALID_SUBJECTS = ["General", "Bug Report", "Feature Request", "Partnership"] as const;
 type Subject = typeof VALID_SUBJECTS[number];
+
+const RATE_LIMIT_MAX = 5;
+const RATE_LIMIT_WINDOW_S = 3600; // 1 hour
 
 interface ContactBody {
   name: string;
@@ -18,7 +22,7 @@ function isValidEmail(email: string): boolean {
 export async function POST(request: NextRequest) {
   const body: Partial<ContactBody> = await request.json().catch(() => ({}));
 
-  // Validate
+  // Validate input
   const errs: Record<string, string> = {};
   if (!body.name?.trim() || body.name.trim().length > 100)
     errs.name = "Name is required (max 100 chars).";
@@ -34,31 +38,48 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ errors: errs }, { status: 400 });
   }
 
-  // Store submission — use admin client because contacts is a public form (no auth)
   const supabase = createAdminClient();
+  const normalizedEmail = body.email!.toLowerCase().trim();
+  const windowStart = new Date(Date.now() - RATE_LIMIT_WINDOW_S * 1000).toISOString();
+
+  // DB-backed rate limit: count recent submissions from this email
+  const { count } = await supabase
+    .from("contacts")
+    .select("id", { count: "exact", head: true })
+    .eq("email", normalizedEmail)
+    .gte("created_at", windowStart);
+
+  if ((count ?? 0) >= RATE_LIMIT_MAX) {
+    return NextResponse.json(
+      { error: "Too many submissions. Please try again later." },
+      {
+        status: 429,
+        headers: { "Retry-After": String(RATE_LIMIT_WINDOW_S) },
+      }
+    );
+  }
+
   await supabase.from("contacts").insert({
     name:    body.name!.trim(),
-    email:   body.email!.toLowerCase().trim(),
+    email:   normalizedEmail,
     subject: body.subject!,
     message: body.message!.trim(),
   });
   // Intentionally not throwing on insert error — prevents enumeration and keeps UX clean.
-  // Failures are visible in Supabase dashboard logs.
 
-  // Optionally notify via Gmail if app token is configured
-  const appToken = process.env.APP_GMAIL_REFRESH_TOKEN;
-  if (appToken) {
+  // Notify via SMTP if configured (uses app mailer, not user Gmail tokens)
+  const notifyEmail = process.env.APP_NOTIFY_EMAIL;
+  if (notifyEmail && process.env.MAILER_USER && process.env.MAILER_APP_PASSWORD) {
     try {
-      const { sendGmail } = await import("@/lib/gmail/send");
-      const notifyEmail = process.env.APP_NOTIFY_EMAIL ?? "support@mailmind.ai";
-      await sendGmail(
-        "system",
-        notifyEmail,
-        `[Contact] ${body.subject}: ${body.name}`,
-        `Name: ${body.name}\nEmail: ${body.email}\nSubject: ${body.subject}\n\n${body.message}`,
-      );
-    } catch {
+      await transporter.sendMail({
+        from:    `"MailMind AI" <${process.env.MAILER_USER}>`,
+        to:      notifyEmail,
+        subject: `[Contact] ${body.subject}: ${body.name!.trim()}`,
+        text:    `Name: ${body.name!.trim()}\nEmail: ${normalizedEmail}\nSubject: ${body.subject}\n\n${body.message!.trim()}`,
+      });
+    } catch (err) {
       // Notification failure is non-fatal
+      console.warn("[contact] Admin notification failed:", (err as Error).message);
     }
   }
 

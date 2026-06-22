@@ -86,21 +86,16 @@ export default function Sidebar({
   const pathname = usePathname();
   const [upgrading, setUpgrading] = useState(false);
   const [portalLoading, setPortalLoading] = useState(false);
+  const [comingSoon, setComingSoon] = useState(false);
 
-  async function handleUpgrade() {
-    setUpgrading(true);
-    const res = await fetch("/api/payments/checkout", { method: "POST" });
-    const data = await res.json();
-    setUpgrading(false);
-    if (data.url) window.location.href = data.url;
+  function handleUpgrade() {
+    setComingSoon(true);
+    setTimeout(() => setComingSoon(false), 3500);
   }
 
-  async function handleManagePlan() {
-    setPortalLoading(true);
-    const res = await fetch("/api/payments/portal", { method: "POST" });
-    const data = await res.json();
-    setPortalLoading(false);
-    if (data.url) window.open(data.url, "_blank");
+  function handleManagePlan() {
+    setComingSoon(true);
+    setTimeout(() => setComingSoon(false), 3500);
   }
 
   return (
@@ -200,17 +195,22 @@ export default function Sidebar({
             <p className="text-[11px] leading-relaxed mb-3" style={{ color: "rgba(255,255,255,0.38)" }}>
               10 emails · 3 clients per month
             </p>
-            <button
-              onClick={() => { onNavClick?.(); handleUpgrade(); }}
-              disabled={upgrading}
-              className="flex w-full items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-bold text-white transition-all animate-btn-glow disabled:opacity-60"
-              style={{ background: "linear-gradient(135deg,#2563eb,#4f46e5)" }}
-            >
-              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
-              {upgrading ? "Opening…" : "Upgrade to Pro"}
-            </button>
+            {comingSoon ? (
+              <p className="rounded-lg py-2 text-center text-[10px] font-semibold animate-fade-in" style={{ background: "rgba(245,158,11,0.12)", border: "1px solid rgba(245,158,11,0.3)", color: "#fbbf24" }}>
+                Coming Soon
+              </p>
+            ) : (
+              <button
+                onClick={() => { onNavClick?.(); handleUpgrade(); }}
+                className="flex w-full items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-bold text-white transition-all animate-btn-glow"
+                style={{ background: "linear-gradient(135deg,#2563eb,#4f46e5)" }}
+              >
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+                Upgrade to Pro
+              </button>
+            )}
           </div>
         ) : (
           <div
@@ -223,18 +223,23 @@ export default function Sidebar({
             <p className="text-[11px] mb-2.5" style={{ color: "rgba(255,255,255,0.38)" }}>
               Unlimited emails &amp; clients
             </p>
-            <button
-              onClick={() => { onNavClick?.(); handleManagePlan(); }}
-              disabled={portalLoading}
-              className="flex w-full items-center justify-center gap-1.5 rounded-lg py-1.5 text-xs font-semibold transition-all hover:-translate-y-0.5 disabled:opacity-60"
-              style={{
-                background: "rgba(99,102,241,0.18)",
-                border: "1px solid rgba(99,102,241,0.35)",
-                color: "#a5b4fc",
-              }}
-            >
-              {portalLoading ? "Loading…" : "Manage Plan"}
-            </button>
+            {comingSoon ? (
+              <p className="rounded-lg py-1.5 text-center text-[10px] font-semibold animate-fade-in" style={{ background: "rgba(245,158,11,0.12)", border: "1px solid rgba(245,158,11,0.3)", color: "#fbbf24" }}>
+                Coming Soon
+              </p>
+            ) : (
+              <button
+                onClick={() => { onNavClick?.(); handleManagePlan(); }}
+                className="flex w-full items-center justify-center gap-1.5 rounded-lg py-1.5 text-xs font-semibold transition-all hover:-translate-y-0.5"
+                style={{
+                  background: "rgba(99,102,241,0.18)",
+                  border: "1px solid rgba(99,102,241,0.35)",
+                  color: "#a5b4fc",
+                }}
+              >
+                Manage Plan
+              </button>
+            )}
           </div>
         )}
       </div>

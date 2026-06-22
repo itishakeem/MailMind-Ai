@@ -5,7 +5,8 @@ import { NextResponse, type NextRequest } from "next/server";
 // Vercel Cron Job endpoint — fires every 5 minutes (vercel.json).
 // Authenticated by CRON_SECRET bearer token.
 // Uses service-role Supabase client to access all users' emails (bypasses RLS).
-// Vercel Cron Jobs send GET requests; POST is kept for manual triggers/testing.
+// Idempotency: rows are atomically claimed with status='sending' before delivery,
+// so concurrent cron instances cannot double-send the same email.
 export async function GET(request: NextRequest) {
   return handler(request);
 }
@@ -25,20 +26,23 @@ async function handler(request: NextRequest) {
   const supabase = createAdminClient();
   const now = new Date().toISOString();
 
-  // Fetch all emails due for delivery
-  const { data: dueEmails, error: fetchError } = await supabase
+  // Atomically claim up to 50 due emails by setting status = 'sending'.
+  // Any row already claimed by a concurrent instance will not match
+  // status = 'scheduled' and will be skipped.
+  const { data: claimed, error: claimError } = await supabase
     .from("emails")
-    .select("id, user_id, subject, body, client_snapshot, scheduled_at")
+    .update({ status: "sending" })
     .eq("status", "scheduled")
     .lte("scheduled_at", now)
-    .limit(50); // Process in batches to stay within serverless time limit
+    .select("id, user_id, subject, body, client_snapshot, scheduled_at")
+    .limit(50);
 
-  if (fetchError) {
-    console.error("[cron] Failed to fetch due emails:", fetchError.message);
-    return NextResponse.json({ error: "Failed to fetch emails" }, { status: 500 });
+  if (claimError) {
+    console.error("[cron] Failed to claim due emails:", claimError.message);
+    return NextResponse.json({ error: "Failed to claim emails" }, { status: 500 });
   }
 
-  const emails = dueEmails ?? [];
+  const emails = claimed ?? [];
   let succeeded = 0;
   let failed = 0;
 

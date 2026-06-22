@@ -37,8 +37,8 @@ export async function GET(request: NextRequest) {
   const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?${params}`;
   const response = NextResponse.redirect(googleAuthUrl);
 
-  // Store PKCE values in short-lived HTTP-only cookies
-  const cookieOpts = { httpOnly: true, secure: true, maxAge: 600, path: "/" } as const;
+  // Store PKCE values in short-lived HTTP-only cookies with explicit SameSite
+  const cookieOpts = { httpOnly: true, secure: true, sameSite: "lax", maxAge: 600, path: "/" } as const;
   response.cookies.set("gmail_pkce_verifier", codeVerifier, cookieOpts);
   response.cookies.set("gmail_pkce_state", state, cookieOpts);
 

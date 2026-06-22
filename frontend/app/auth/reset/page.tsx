@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { MailCheck } from "lucide-react";
 
 const inputStyle: React.CSSProperties = {
   width: "100%",
@@ -17,58 +17,44 @@ const inputStyle: React.CSSProperties = {
 };
 
 export default function ResetPasswordPage() {
-  const [email, setEmail]   = useState("");
-  const [sent, setSent]     = useState(false);
+  const router = useRouter();
+  const [email, setEmail]     = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError]     = useState<string | null>(null);
   const [focused, setFocused] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setError(null);
     setLoading(true);
-    await fetch("/api/auth/password-reset", {
+
+    const res = await fetch("/api/auth/send-otp", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email }),
+      body: JSON.stringify({ email, type: "password_reset" }),
     });
-    setLoading(false);
-    setSent(true);
-  }
 
-  if (sent) {
-    return (
-      <div className="text-center space-y-4">
-        <div
-          className="mx-auto flex h-12 w-12 items-center justify-center rounded-full"
-          style={{ background: "rgba(99,102,241,0.15)" }}
-        >
-          <MailCheck className="h-6 w-6" style={{ color: "#818cf8" }} />
-        </div>
-        <h2 className="text-lg font-bold text-white">Check your inbox</h2>
-        <p className="text-sm" style={{ color: "rgba(255,255,255,0.5)" }}>
-          If <span className="font-medium text-white">{email}</span> is registered,
-          we sent a password reset link.
-        </p>
-        <Link
-          href="/auth/login"
-          className="mt-2 block text-sm font-medium transition-colors"
-          style={{ color: "#818cf8" }}
-          onMouseEnter={e => (e.currentTarget.style.color = "#a5b4fc")}
-          onMouseLeave={e => (e.currentTarget.style.color = "#818cf8")}
-        >
-          Back to sign in
-        </Link>
-      </div>
-    );
+    const data = await res.json();
+    setLoading(false);
+
+    if (!res.ok) {
+      setError(data.error ?? "Something went wrong. Please try again.");
+      return;
+    }
+
+    // Always redirect (we don't reveal whether the email exists)
+    router.push(`/auth/verify-otp?type=password_reset&email=${encodeURIComponent(email)}`);
   }
 
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl font-bold text-white">Reset your password</h2>
+        <h2 className="text-xl font-bold text-white">Forgot password?</h2>
         <p className="mt-1 text-sm" style={{ color: "rgba(255,255,255,0.45)" }}>
-          Enter your email and we&apos;ll send a reset link.
+          Enter your email and we&apos;ll send a 6-digit reset code.
         </p>
       </div>
+
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label className="mb-1.5 block text-sm font-medium" style={{ color: "rgba(255,255,255,0.65)" }}>
@@ -80,16 +66,25 @@ export default function ResetPasswordPage() {
             value={email}
             onChange={e => setEmail(e.target.value)}
             placeholder="you@example.com"
+            autoComplete="email"
             style={{
               ...inputStyle,
-              ...(focused
-                ? { borderColor: "rgba(99,102,241,0.7)", boxShadow: "0 0 0 3px rgba(99,102,241,0.2)" }
-                : {}),
+              ...(focused ? { borderColor: "rgba(99,102,241,0.7)", boxShadow: "0 0 0 3px rgba(99,102,241,0.2)" } : {}),
             }}
             onFocus={() => setFocused(true)}
             onBlur={() => setFocused(false)}
           />
         </div>
+
+        {error && (
+          <div
+            className="rounded-xl px-4 py-2.5 text-sm"
+            style={{ background: "rgba(239,68,68,0.15)", border: "1px solid rgba(239,68,68,0.35)", color: "#fca5a5" }}
+          >
+            {error}
+          </div>
+        )}
+
         <button
           type="submit"
           disabled={loading}
@@ -99,9 +94,10 @@ export default function ResetPasswordPage() {
             boxShadow: "0 4px 18px rgba(79,70,229,0.4)",
           }}
         >
-          {loading ? "Sending…" : "Send Reset Link"}
+          {loading ? "Sending code…" : "Send Reset Code"}
         </button>
       </form>
+
       <Link
         href="/auth/login"
         className="block text-center text-sm transition-colors"
@@ -109,7 +105,7 @@ export default function ResetPasswordPage() {
         onMouseEnter={e => (e.currentTarget.style.color = "rgba(255,255,255,0.65)")}
         onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.35)")}
       >
-        Back to sign in
+        ← Back to sign in
       </Link>
     </div>
   );

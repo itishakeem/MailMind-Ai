@@ -1,6 +1,5 @@
 "use client";
 
-import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -61,21 +60,25 @@ export default function SignupForm() {
     setError(null);
     setLoading(true);
 
-    const supabase = createClient();
-    const { error: signUpError } = await supabase.auth.signUp({
-      email: form.email,
-      password: form.password,
-      options: { data: { full_name: form.name } },
+    const res = await fetch("/api/auth/send-otp", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: form.email, type: "signup" }),
     });
 
+    const data = await res.json();
     setLoading(false);
 
-    if (signUpError) {
-      setError(signUpError.message);
+    if (!res.ok) {
+      setError(data.error ?? "Failed to send verification code.");
       return;
     }
 
-    router.push("/settings");
+    // Temporarily hold credentials in sessionStorage for the OTP page to pick up
+    sessionStorage.setItem("signup_name", form.name);
+    sessionStorage.setItem("signup_password", form.password);
+
+    router.push(`/auth/verify-otp?type=signup&email=${encodeURIComponent(form.email)}`);
   }
 
   return (
@@ -124,7 +127,7 @@ export default function SignupForm() {
           boxShadow: "0 4px 18px rgba(79,70,229,0.4)",
         }}
       >
-        {loading ? "Creating account…" : "Create Account"}
+        {loading ? "Sending code…" : "Create Account"}
       </button>
     </form>
   );

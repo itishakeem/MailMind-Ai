@@ -29,7 +29,8 @@ export async function GET(_req: NextRequest, { params }: Params) {
     .select("id, subject, ai_detected_type, status, sent_at, created_at")
     .eq("client_id", id)
     .eq("user_id", user.id)
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false })
+    .limit(100);
 
   return NextResponse.json({ client, emails: emails ?? [] });
 }

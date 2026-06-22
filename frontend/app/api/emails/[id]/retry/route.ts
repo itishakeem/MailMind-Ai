@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { sendGmail, GmailSendError } from "@/lib/gmail/send";
+import { assertPlanLimit, PlanLimitReachedError } from "@/lib/plan-limits";
 import { NextResponse, type NextRequest } from "next/server";
 
 type Params = { params: Promise<{ id: string }> };
@@ -32,6 +33,16 @@ export async function POST(_req: NextRequest, { params }: Params) {
     return NextResponse.json({ error: "Client email address not found" }, { status: 400 });
   }
 
+  // Enforce plan limit on retry — same as immediate send
+  try {
+    await assertPlanLimit(supabase, user.id, "email_send");
+  } catch (err) {
+    if (err instanceof PlanLimitReachedError) {
+      return NextResponse.json(err.details, { status: 402 });
+    }
+    return NextResponse.json({ error: "Failed to check plan limits" }, { status: 500 });
+  }
+
   try {
     const { messageId } = await sendGmail(
       user.id,
@@ -42,7 +53,12 @@ export async function POST(_req: NextRequest, { params }: Params) {
 
     await supabase
       .from("emails")
-      .update({ status: "sent", sent_at: new Date().toISOString(), failure_reason: null, gmail_message_id: messageId })
+      .update({
+        status: "sent",
+        sent_at: new Date().toISOString(),
+        failure_reason: null,
+        gmail_message_id: messageId,
+      })
       .eq("id", id);
 
     return NextResponse.json({ email_id: id, gmail_message_id: messageId });

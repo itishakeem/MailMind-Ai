@@ -111,3 +111,170 @@
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
 }
+
+/* ─── Extra animations ───────────────────────────────────────────── */
+
+@keyframes slideInLeft {
+  from { opacity: 0; transform: translateX(-20px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(20px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.94); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes popIn {
+  0%   { opacity: 0; transform: scale(0.7); }
+  70%  { transform: scale(1.05); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes borderPulse {
+  0%, 100% { border-color: rgba(99,102,241,0.35); }
+  50%       { border-color: rgba(99,102,241,0.8); }
+}
+
+.animate-slide-in-left {
+  opacity: 0;
+  animation: slideInLeft 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.animate-slide-in-right {
+  opacity: 0;
+  animation: slideInRight 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.animate-scale-in {
+  opacity: 0;
+  animation: scaleIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.animate-pop-in {
+  opacity: 0;
+  animation: popIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.animate-border-pulse {
+  animation: borderPulse 2.5s ease-in-out infinite;
+}
+
+/* ─── Stagger delay utilities ─────────────────────────────────────── */
+
+.delay-100 { animation-delay: 100ms; }
+.delay-150 { animation-delay: 150ms; }
+.delay-200 { animation-delay: 200ms; }
+.delay-300 { animation-delay: 300ms; }
+.delay-400 { animation-delay: 400ms; }
+.delay-500 { animation-delay: 500ms; }
+.delay-600 { animation-delay: 600ms; }
+.delay-700 { animation-delay: 700ms; }
+
+/* ─── Glow border ────────────────────────────────────────────────── */
+
+.glow-border {
+  box-shadow: 0 0 0 1px rgba(99,102,241,0.3), 0 0 24px rgba(99,102,241,0.12);
+  transition: box-shadow 0.3s ease;
+}
+
+.glow-border:hover {
+  box-shadow: 0 0 0 1px rgba(99,102,241,0.6), 0 0 40px rgba(99,102,241,0.22);
+}
+
+/* ─── Professional card ──────────────────────────────────────────── */
+
+.pro-card {
+  background: #ffffff;
+  border: 1px solid rgba(0,0,0,0.06);
+  border-radius: 16px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05), 0 4px 16px rgba(0,0,0,0.04);
+  transition: box-shadow 0.22s ease, transform 0.22s ease;
+}
+
+.pro-card:hover {
+  box-shadow: 0 8px 32px rgba(0,0,0,0.1), 0 2px 8px rgba(0,0,0,0.06);
+  transform: translateY(-2px);
+}
+
+/* ─── Extended neon / glow system ───────────────────────────────── */
+
+@keyframes neonPulse {
+  0%, 100% { box-shadow: 0 0 14px rgba(99,102,241,0.4), 0 0 28px rgba(99,102,241,0.15); }
+  50%       { box-shadow: 0 0 26px rgba(99,102,241,0.72), 0 0 52px rgba(99,102,241,0.32), 0 0 90px rgba(99,102,241,0.14); }
+}
+
+@keyframes proCardGlow {
+  0%, 100% { box-shadow: 0 0 0 1px rgba(99,102,241,0.55), 0 0 55px rgba(99,102,241,0.3), 0 0 110px rgba(99,102,241,0.12), 0 20px 60px rgba(0,0,0,0.4); }
+  50%       { box-shadow: 0 0 0 1px rgba(99,102,241,0.88), 0 0 90px rgba(99,102,241,0.52), 0 0 160px rgba(99,102,241,0.22), 0 20px 60px rgba(0,0,0,0.45); }
+}
+
+@keyframes textGlow {
+  0%, 100% { text-shadow: 0 0 10px rgba(129,140,248,0.55), 0 0 20px rgba(129,140,248,0.2); }
+  50%       { text-shadow: 0 0 18px rgba(129,140,248,0.85), 0 0 36px rgba(129,140,248,0.42), 0 0 70px rgba(129,140,248,0.2); }
+}
+
+@keyframes badgeGlow {
+  0%, 100% { box-shadow: 0 0 0 1px rgba(99,102,241,0.24), 0 0 14px rgba(99,102,241,0.1); }
+  50%       { box-shadow: 0 0 0 1px rgba(99,102,241,0.5), 0 0 26px rgba(99,102,241,0.24), 0 0 50px rgba(99,102,241,0.1); }
+}
+
+@keyframes btnGlowPulse {
+  0%, 100% { box-shadow: 0 0 22px rgba(79,70,229,0.52), 0 0 50px rgba(79,70,229,0.22), 0 8px 24px rgba(79,70,229,0.42); }
+  50%       { box-shadow: 0 0 36px rgba(79,70,229,0.74), 0 0 80px rgba(79,70,229,0.38), 0 8px 24px rgba(79,70,229,0.54); }
+}
+
+@keyframes iconGlow {
+  0%, 100% { box-shadow: 0 0 12px rgba(99,102,241,0.38), 0 0 24px rgba(99,102,241,0.14); }
+  50%       { box-shadow: 0 0 20px rgba(99,102,241,0.68), 0 0 40px rgba(99,102,241,0.28); }
+}
+
+@keyframes logoGlow {
+  0%, 100% { box-shadow: 0 0 18px rgba(79,70,229,0.55), 0 0 40px rgba(79,70,229,0.22), 0 4px 12px rgba(79,70,229,0.4); }
+  50%       { box-shadow: 0 0 32px rgba(79,70,229,0.82), 0 0 65px rgba(79,70,229,0.42), 0 4px 12px rgba(79,70,229,0.55); }
+}
+
+.animate-neon-pulse  { animation: neonPulse 2.5s ease-in-out infinite; }
+.animate-pro-glow    { animation: proCardGlow 2.5s ease-in-out infinite; }
+
+/* Pro card: fade-in first, then loop the glow (avoids animation property conflict) */
+.animate-pro-entry-glow {
+  opacity: 0;
+  animation:
+    fadeInUp 0.65s 100ms cubic-bezier(0.22, 1, 0.36, 1) forwards,
+    proCardGlow 2.5s 800ms ease-in-out infinite;
+}
+.animate-text-glow   { animation: textGlow 3s ease-in-out infinite; }
+.animate-badge-glow  { animation: badgeGlow 2s ease-in-out infinite; }
+.animate-btn-glow    { animation: btnGlowPulse 2.5s ease-in-out infinite; }
+.animate-icon-glow   { animation: iconGlow 2.5s ease-in-out infinite; }
+.animate-logo-glow   { animation: logoGlow 2.5s ease-in-out infinite; }
+
+/* ─── Glow text (static) ─────────────────────────────────────────── */
+
+.glow-text {
+  text-shadow: 0 0 12px rgba(129,140,248,0.62), 0 0 24px rgba(129,140,248,0.32), 0 0 48px rgba(129,140,248,0.16);
+}
+
+/* ─── Neon card (dark surfaces) ──────────────────────────────────── */
+
+.neon-card {
+  border: 1px solid rgba(99,102,241,0.18);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+  transition: border-color 0.35s ease, box-shadow 0.35s ease, transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.neon-card:hover {
+  border-color: rgba(99,102,241,0.55);
+  box-shadow: 0 0 0 1px rgba(99,102,241,0.28), 0 0 40px rgba(99,102,241,0.18), 0 0 80px rgba(99,102,241,0.07), 0 24px 48px rgba(0,0,0,0.28);
+  transform: translateY(-5px);
+}
+
+/* ─── Sidebar active nav glow ─────────────────────────────────────── */
+
+.nav-item-active {
+  box-shadow: inset 0 0 20px rgba(99,102,241,0.18), 0 0 14px rgba(99,102,241,0.1);
+}

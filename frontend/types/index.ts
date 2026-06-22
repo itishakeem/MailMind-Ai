@@ -71,7 +71,7 @@ export interface PlanLimits {
 }
 
 export const PLAN_LIMITS: Record<Plan, PlanLimits> = {
-  free: { max_emails_per_month: 10, max_clients: 3 },
+  free: { max_emails_per_month: 10, max_clients: 5 },
   pro: { max_emails_per_month: null, max_clients: null },
   business: { max_emails_per_month: null, max_clients: null },
 };

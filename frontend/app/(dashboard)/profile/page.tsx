@@ -63,28 +63,16 @@ export default function ProfilePage() {
   const [confirmText,   setConfirmText]   = useState("");
   const [deleting,      setDeleting]      = useState(false);
   const [deleteError,   setDeleteError]   = useState<string | null>(null);
-  const [upgrading,     setUpgrading]     = useState(false);
-  const [portalLoading, setPortalLoading] = useState(false);
   const [signature,     setSignature]     = useState("");
   const [sigSaving,     setSigSaving]     = useState(false);
   const [sigFocused,    setSigFocused]    = useState(false);
 
-  async function handleUpgrade() {
-    setUpgrading(true);
-    const res = await fetch("/api/payments/checkout", { method: "POST" });
-    const data = await res.json();
-    setUpgrading(false);
-    if (data.url) window.location.href = data.url;
-    else setMessage({ type: "error", text: data.error ?? "Could not open checkout." });
+  function handleUpgrade() {
+    setMessage({ type: "success", text: "Pro plan is coming soon! We'll notify you when subscriptions open." });
   }
 
-  async function handleManagePlan() {
-    setPortalLoading(true);
-    const res = await fetch("/api/payments/portal", { method: "POST" });
-    const data = await res.json();
-    setPortalLoading(false);
-    if (data.url) window.open(data.url, "_blank");
-    else setMessage({ type: "error", text: data.error ?? "Could not open billing portal." });
+  function handleManagePlan() {
+    setMessage({ type: "success", text: "Billing portal is coming soon!" });
   }
 
   useEffect(() => {
@@ -286,27 +274,25 @@ export default function ProfilePage() {
               {profile.plan === "free" ? (
                 <button
                   onClick={handleUpgrade}
-                  disabled={upgrading}
-                  className="inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-sm font-bold text-white transition-all hover:-translate-y-0.5 disabled:opacity-60 disabled:cursor-not-allowed animate-btn-glow"
+                  className="inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-sm font-bold text-white transition-all hover:-translate-y-0.5 animate-btn-glow"
                   style={{ background: "linear-gradient(135deg,#2563eb,#4f46e5)" }}
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
                   </svg>
-                  {upgrading ? "Opening checkout…" : "Upgrade to Pro — $9.99/mo"}
+                  Upgrade to Pro — $9.99/mo
                 </button>
               ) : (
                 <button
                   onClick={handleManagePlan}
-                  disabled={portalLoading}
-                  className="inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-sm font-semibold transition-all hover:-translate-y-0.5 disabled:opacity-60"
+                  className="inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-sm font-semibold transition-all hover:-translate-y-0.5"
                   style={{
                     background: "rgba(99,102,241,0.08)",
                     border: "1px solid rgba(99,102,241,0.3)",
                     color: "#4f46e5",
                   }}
                 >
-                  {portalLoading ? "Loading…" : "Manage Subscription"}
+                  Manage Subscription
                 </button>
               )}
             </div>
@@ -337,7 +323,6 @@ export default function ProfilePage() {
             <p className="text-gray-500 mb-2">Personalise every email with a closing signature — name, title, phone, website.</p>
             <button
               onClick={handleUpgrade}
-              disabled={upgrading}
               className="inline-flex items-center gap-1 text-xs font-bold rounded-lg px-3 py-1.5 text-white"
               style={{ background: "linear-gradient(135deg,#2563eb,#4f46e5)" }}
             >

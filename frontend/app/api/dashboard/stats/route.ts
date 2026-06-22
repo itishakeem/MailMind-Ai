@@ -33,13 +33,14 @@ export async function GET() {
         .eq("user_id", user.id)
         .eq("status", "scheduled"),
 
-      // All sent emails (for per-client aggregation)
+      // All sent emails for per-client aggregation (capped at 500 to avoid OOM on large accounts)
       supabase
         .from("emails")
         .select("client_id, client_snapshot, sent_at")
         .eq("user_id", user.id)
         .eq("status", "sent")
-        .order("sent_at", { ascending: false }),
+        .order("sent_at", { ascending: false })
+        .limit(500),
 
       // Client count
       supabase
@@ -47,10 +48,10 @@ export async function GET() {
         .select("id", { count: "exact", head: true })
         .eq("user_id", user.id),
 
-      // User plan
+      // User plan + name
       supabase
         .from("users")
-        .select("plan")
+        .select("plan, name")
         .eq("id", user.id)
         .single(),
     ]);
@@ -59,6 +60,7 @@ export async function GET() {
   const scheduledCount = scheduledResult.count ?? 0;
   const clientsCount = clientCountResult.count ?? 0;
   const plan = (userResult.data?.plan ?? "free") as Plan;
+  const userName = (userResult.data?.name as string | null) ?? null;
   const limits = PLAN_LIMITS[plan];
 
   // Aggregate per-client activity in JS (avoids raw SQL)
@@ -101,6 +103,7 @@ export async function GET() {
     scheduled_count: scheduledCount,
     per_client_activity: perClientActivity,
     plan,
+    user_name: userName,
     plan_usage: {
       emails_used: emailsSentThisMonth,
       emails_limit: limits.max_emails_per_month,
