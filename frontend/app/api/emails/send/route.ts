@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
   // Send via Gmail
   let messageId: string;
   try {
-    const result = await sendGmail(user.id, client.email, subject.trim(), emailBody.trim());
+    const result = await sendGmail(user.id, client.email, subject.trim(), emailBody.trim(), { emailType: ai_detected_type });
     messageId = result.messageId;
   } catch (err) {
     if (err instanceof GmailSendError) {

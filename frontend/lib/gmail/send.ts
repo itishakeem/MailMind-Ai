@@ -2,11 +2,18 @@ import { google } from "googleapis";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 import { encryptToken, decryptToken } from "@/lib/gmail/oauth";
+import { renderEmailHtml } from "@/lib/email/html-template";
+import type { EmailType } from "@/types";
 
 interface GmailTokenData {
   access_token: string;
   refresh_token: string | null;
   expires_at: number;
+}
+
+export interface SendGmailOptions {
+  emailType?: EmailType | null;
+  adminClient?: SupabaseClient;
 }
 
 export class GmailSendError extends Error {
@@ -16,18 +23,36 @@ export class GmailSendError extends Error {
   }
 }
 
-// Builds an RFC 2822 email message encoded in base64url for the Gmail API.
+// Builds a multipart MIME email with HTML body encoded in base64url for the Gmail API.
 // CR and LF are stripped from header values to prevent email header injection.
-function buildRawMessage(to: string, subject: string, body: string): string {
+function buildRawMessage(
+  to: string,
+  subject: string,
+  htmlBody: string,
+  plainText: string
+): string {
   const safeHeader = (v: string) => v.replace(/[\r\n]/g, "");
+  const boundary = "----=_MailMindPart_001";
 
   const message = [
     `To: ${safeHeader(to)}`,
     `Subject: ${safeHeader(subject)}`,
-    "Content-Type: text/plain; charset=utf-8",
     "MIME-Version: 1.0",
+    `Content-Type: multipart/alternative; boundary="${boundary}"`,
     "",
-    body,
+    `--${boundary}`,
+    "Content-Type: text/plain; charset=utf-8",
+    "Content-Transfer-Encoding: quoted-printable",
+    "",
+    plainText,
+    "",
+    `--${boundary}`,
+    "Content-Type: text/html; charset=utf-8",
+    "Content-Transfer-Encoding: quoted-printable",
+    "",
+    htmlBody,
+    "",
+    `--${boundary}--`,
   ].join("\r\n");
 
   return Buffer.from(message)
@@ -38,7 +63,6 @@ function buildRawMessage(to: string, subject: string, body: string): string {
 }
 
 // Refreshes the access token using the stored refresh token.
-// Updates the encrypted token in Supabase and returns the new access token.
 async function refreshAccessToken(
   userId: string,
   tokenData: GmailTokenData,
@@ -84,17 +108,16 @@ async function refreshAccessToken(
   return data.access_token;
 }
 
-// Sends an email from the user's connected Gmail account.
-// Handles transparent token refresh on 401. Throws GmailSendError on failure.
-// Pass a service-role client when calling from a cron/background context with no user session.
+// Sends an email from the user's connected Gmail account as HTML.
+// Pass adminClient in options when calling from a cron/background context with no user session.
 export async function sendGmail(
   userId: string,
   to: string,
   subject: string,
   body: string,
-  adminClient?: SupabaseClient
+  options?: SendGmailOptions
 ): Promise<{ messageId: string }> {
-  const supabase = adminClient ?? (await createClient());
+  const supabase = options?.adminClient ?? (await createClient());
 
   const { data: profile, error } = await supabase
     .from("users")
@@ -126,11 +149,13 @@ export async function sendGmail(
   auth.setCredentials({ access_token: tokenData.access_token });
 
   const gmail = google.gmail({ version: "v1", auth });
+  const htmlBody = renderEmailHtml(options?.emailType, body);
+  const raw = buildRawMessage(to, subject, htmlBody, body);
 
   try {
     const res = await gmail.users.messages.send({
       userId: "me",
-      requestBody: { raw: buildRawMessage(to, subject, body) },
+      requestBody: { raw },
     });
 
     return { messageId: res.data.id ?? "" };
@@ -143,7 +168,7 @@ export async function sendGmail(
 
       const retryRes = await gmail.users.messages.send({
         userId: "me",
-        requestBody: { raw: buildRawMessage(to, subject, body) },
+        requestBody: { raw },
       });
 
       return { messageId: retryRes.data.id ?? "" };

@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { sendGmail, GmailSendError } from "@/lib/gmail/send";
 import { NextResponse } from "next/server";
+import type { EmailType } from "@/types";
 
 export async function POST() {
   const supabase = await createClient();
@@ -13,7 +14,7 @@ export async function POST() {
 
   const { data: due, error: selectError } = await supabase
     .from("emails")
-    .select("id, subject, body, client_snapshot")
+    .select("id, subject, body, client_snapshot, ai_detected_type")
     .eq("user_id", user.id)
     .eq("status", "scheduled")
     .lte("scheduled_at", now);
@@ -48,7 +49,8 @@ export async function POST() {
           user.id,
           snapshot.email,
           email.subject,
-          email.body
+          email.body,
+          { emailType: (email as { ai_detected_type?: EmailType }).ai_detected_type }
         );
         await supabase
           .from("emails")

@@ -15,7 +15,7 @@ export async function POST(_req: NextRequest, { params }: Params) {
 
   const { data: email, error: fetchError } = await supabase
     .from("emails")
-    .select("id, subject, body, client_snapshot, status")
+    .select("id, subject, body, client_snapshot, status, ai_detected_type")
     .eq("id", id)
     .eq("user_id", user.id)
     .eq("status", "failed")
@@ -48,7 +48,8 @@ export async function POST(_req: NextRequest, { params }: Params) {
       user.id,
       snapshot.email,
       email.subject,
-      email.body
+      email.body,
+      { emailType: (email as { ai_detected_type?: string }).ai_detected_type as import("@/types").EmailType ?? null }
     );
 
     await supabase

@@ -1,6 +1,7 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendGmail, GmailSendError } from "@/lib/gmail/send";
 import { NextResponse, type NextRequest } from "next/server";
+import type { EmailType } from "@/types";
 
 // Vercel Cron Job endpoint — fires every 5 minutes (vercel.json).
 // Authenticated by CRON_SECRET bearer token.
@@ -28,7 +29,7 @@ async function handler(request: NextRequest) {
 
   const { data: due, error: selectError } = await supabase
     .from("emails")
-    .select("id, user_id, subject, body, client_snapshot, scheduled_at")
+    .select("id, user_id, subject, body, client_snapshot, scheduled_at, ai_detected_type")
     .eq("status", "scheduled")
     .lte("scheduled_at", now)
     .limit(50);
@@ -60,7 +61,10 @@ async function handler(request: NextRequest) {
           snapshot.email,
           email.subject,
           email.body,
-          supabase
+          {
+            emailType: (email as { ai_detected_type?: EmailType }).ai_detected_type,
+            adminClient: supabase,
+          }
         );
 
         await supabase
