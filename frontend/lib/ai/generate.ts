@@ -25,7 +25,7 @@ const TypeSchema = z.object({
 
 // Both primary and fallback route through OpenRouter — single API key required.
 // Primary model  : google/gemini-2.5-flash
-// Fallback model : nvidia/nemotron-3-super-120b-a12b:free
+// Fallback model : openrouter/auto (free-tier routing)
 function openRouter(): OpenAI {
   if (!process.env.OPENROUTER_API_KEY) {
     throw new AIUnavailableError("AI service is not configured (missing API key).");
@@ -48,7 +48,7 @@ function parseJsonResponse(raw: string): unknown {
   return JSON.parse(match[0]);
 }
 
-type ModelUsed = "gemini-flash" | "nemotron-free";
+type ModelUsed = "gemini-flash" | "openrouter-auto";
 type ErrorKind = "auth_error" | "rate_limit" | "timeout" | "upstream_error" | "parse_error";
 
 function classifyError(err: unknown): { kind: ErrorKind; status?: number; message: string } {
@@ -66,25 +66,25 @@ function logAI(level: "warn" | "error", model: string, kind: ErrorKind, message:
   console[level](`[AI] ${level} model=${model} code=${kind}${statusPart} msg="${message}"`);
 }
 
-// Free plan: NVIDIA Nemotron (free tier via OpenRouter — zero cost).
+// Free plan: openrouter/auto routes to the best available free model.
 async function callFreeModel(
   prompt: string,
-  maxTokens = 800
+  maxTokens = 700
 ): Promise<{ content: string; model: ModelUsed }> {
   const client = openRouter();
   try {
     const res = await client.chat.completions.create({
-      model: "nvidia/nemotron-3-super-120b-a12b:free",
+      model: "openrouter/auto",
       messages: [{ role: "user", content: prompt }],
-      temperature: 0.7,
+      temperature: 0.6,
       max_tokens: maxTokens,
     });
     const content = res.choices[0]?.message?.content?.trim();
-    if (content) return { content, model: "nemotron-free" };
+    if (content) return { content, model: "openrouter-auto" };
     throw new Error("Empty response from free model");
   } catch (err) {
     const { kind, status, message } = classifyError(err);
-    logAI("error", "nvidia/nemotron-3-super-120b-a12b:free", kind, message, status);
+    logAI("error", "openrouter/auto", kind, message, status);
     if (kind === "auth_error") throw new AIUnavailableError("AI service authentication failed. Contact support.");
     if (kind === "rate_limit") throw new AIUnavailableError("AI service is rate-limited. Please try again in a moment.");
   }
@@ -117,7 +117,7 @@ async function callProModel(
     logAI("warn", "google/gemini-2.5-flash", kind, message, status);
   }
 
-  // Fallback to free model if Gemini Flash fails
+  // Fallback to openrouter/auto if Gemini Flash fails
   return callFreeModel(prompt, maxTokens);
 }
 

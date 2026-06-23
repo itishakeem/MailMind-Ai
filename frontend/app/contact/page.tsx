@@ -107,7 +107,7 @@ export default function ContactPage() {
               onClick={() => setSuccess(false)}
               className="mt-6 text-sm transition-colors"
               style={{ color: ACC }}
-              onMouseEnter={e => (e.currentTarget.style.color = "#818cf8")}
+              onMouseEnter={e => (e.currentTarget.style.color = "var(--a-text)")}
               onMouseLeave={e => (e.currentTarget.style.color = ACC)}
             >
               Send another message
@@ -171,7 +171,7 @@ export default function ContactPage() {
               disabled={submitting}
               className="w-full rounded-lg py-3 text-sm font-medium text-white transition-colors disabled:opacity-60"
               style={{ background: ACC }}
-              onMouseEnter={e => { if (!submitting) (e.currentTarget as HTMLButtonElement).style.background = "#4F46E5"; }}
+              onMouseEnter={e => { if (!submitting) (e.currentTarget as HTMLButtonElement).style.background = "var(--a-to)"; }}
               onMouseLeave={e => (e.currentTarget as HTMLButtonElement).style.background = ACC}
             >
               {submitting ? "Sending…" : "Send Message"}

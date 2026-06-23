@@ -48,10 +48,10 @@ function CircularProgress({
 function PlanUsageSection({ stats }: { stats: DashboardStats }) {
   if (stats.plan !== "free") return null;
 
-  const emailPct  = stats.plan_usage.emails_limit
+  const emailPct  = stats.plan_usage?.emails_limit
     ? Math.round((stats.plan_usage.emails_used / stats.plan_usage.emails_limit) * 100)
     : 0;
-  const clientPct = stats.plan_usage.clients_limit
+  const clientPct = stats.plan_usage?.clients_limit
     ? Math.round((stats.plan_usage.clients_used / stats.plan_usage.clients_limit) * 100)
     : 0;
 
@@ -61,7 +61,7 @@ function PlanUsageSection({ stats }: { stats: DashboardStats }) {
   return (
     <div
       className="bg-white rounded-2xl p-6 animate-fade-in-up"
-      style={{ border: "1px solid rgba(0,0,0,0.06)", boxShadow: "0 1px 4px rgba(0,0,0,0.05)", animationDelay: "200ms" }}
+      style={{ background: "var(--bg-surface)", border: "1px solid var(--border)", boxShadow: "var(--shadow-sm)", animationDelay: "200ms" }}
     >
       <div className="flex items-center justify-between mb-5 flex-wrap gap-3">
         <div>
@@ -71,7 +71,7 @@ function PlanUsageSection({ stats }: { stats: DashboardStats }) {
         <Link
           href="/#pricing"
           className="inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-bold text-white transition-all hover:-translate-y-0.5"
-          style={{ background: "linear-gradient(135deg,#2563eb,#4f46e5)", boxShadow: "0 4px 14px rgba(79,70,229,0.35)" }}
+          style={{ background: "var(--a-gradient)", boxShadow: "0 4px 14px rgba(79,70,229,0.35)" }}
         >
           <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
@@ -92,7 +92,7 @@ function PlanUsageSection({ stats }: { stats: DashboardStats }) {
           <div className="text-center">
             <p className="text-sm font-bold text-gray-900">Emails</p>
             <p className="text-xs text-gray-400">
-              {stats.plan_usage.emails_used} / {stats.plan_usage.emails_limit} used
+              {stats.plan_usage?.emails_used} / {stats.plan_usage?.emails_limit} used
             </p>
           </div>
         </div>
@@ -108,7 +108,7 @@ function PlanUsageSection({ stats }: { stats: DashboardStats }) {
           <div className="text-center">
             <p className="text-sm font-bold text-gray-900">Clients</p>
             <p className="text-xs text-gray-400">
-              {stats.plan_usage.clients_used} / {stats.plan_usage.clients_limit} used
+              {stats.plan_usage?.clients_used} / {stats.plan_usage?.clients_limit} used
             </p>
           </div>
         </div>
@@ -177,14 +177,14 @@ function DashboardContent() {
 
   useEffect(() => {
     fetch("/api/dashboard/stats")
-      .then(r => r.json())
+      .then(r => { if (!r.ok) throw new Error(); return r.json(); })
       .then(d => { setStats(d); setLoading(false); })
       .catch(() => setLoading(false));
   }, []);
 
   const planUsageLabel =
     stats?.plan === "free"
-      ? `${stats.plan_usage.emails_used} / ${stats.plan_usage.emails_limit} emails used`
+      ? `${stats.plan_usage?.emails_used} / ${stats.plan_usage?.emails_limit} emails used`
       : "Unlimited";
 
   return (
@@ -216,7 +216,7 @@ function DashboardContent() {
                 style={{
                   background: "rgba(99,102,241,0.08)",
                   border: "1px solid rgba(99,102,241,0.3)",
-                  color: "#4f46e5",
+                  color: "var(--a-to)",
                 }}
               >
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -245,7 +245,7 @@ function DashboardContent() {
               href="/compose"
               className="inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold text-white transition-all hover:-translate-y-0.5"
               style={{
-                background: "linear-gradient(135deg,#2563eb,#4f46e5)",
+                background: "var(--a-gradient)",
                 boxShadow: "0 4px 14px rgba(79,70,229,0.35)",
               }}
             >
@@ -279,10 +279,10 @@ function DashboardContent() {
           />
           <StatCard
             title="Clients"
-            value={stats?.plan_usage.clients_used ?? 0}
+            value={stats?.plan_usage?.clients_used ?? 0}
             subtitle={
               stats?.plan === "free"
-                ? `${stats.plan_usage.clients_used} / ${stats.plan_usage.clients_limit} on free plan`
+                ? `${stats.plan_usage?.clients_used} / ${stats.plan_usage?.clients_limit} on free plan`
                 : "Unlimited"
             }
             loading={loading}
@@ -291,7 +291,7 @@ function DashboardContent() {
           />
           <StatCard
             title="Plan Usage"
-            value={loading ? "—" : stats?.plan === "free" ? `${stats.plan_usage.emails_used} / ${stats.plan_usage.emails_limit}` : "∞"}
+            value={loading ? "—" : stats?.plan === "free" ? `${stats.plan_usage?.emails_used} / ${stats.plan_usage?.emails_limit}` : "∞"}
             subtitle={loading ? undefined : planUsageLabel}
             loading={loading}
             icon={STAT_ICONS.plan}
@@ -310,8 +310,8 @@ function DashboardContent() {
       {/* Client activity */}
       <FadeSection delay={240}>
         <div
-          className="bg-white rounded-2xl"
-          style={{ border: "1px solid rgba(0,0,0,0.06)", boxShadow: "0 1px 4px rgba(0,0,0,0.05)" }}
+          className="rounded-2xl"
+          style={{ background: "var(--bg-surface)", border: "1px solid var(--border)", boxShadow: "var(--shadow-sm)" }}
         >
           <div className="flex items-center justify-between px-6 pt-5 pb-4" style={{ borderBottom: "1px solid rgba(0,0,0,0.05)" }}>
             <div>
@@ -321,9 +321,9 @@ function DashboardContent() {
             <Link
               href="/clients"
               className="text-sm font-semibold transition-colors"
-              style={{ color: "#4f46e5" }}
+              style={{ color: "var(--a-to)" }}
               onMouseEnter={e => (e.currentTarget.style.color = "#4338ca")}
-              onMouseLeave={e => (e.currentTarget.style.color = "#4f46e5")}
+              onMouseLeave={e => (e.currentTarget.style.color = "var(--a-to)")}
             >
               View all →
             </Link>

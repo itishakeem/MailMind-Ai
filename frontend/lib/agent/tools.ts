@@ -7,30 +7,46 @@ export function buildSystemPrompt(ctx: {
 }): string {
   const name = ctx.userName ?? "there";
   const planLabel = ctx.plan === "free" ? "Free" : ctx.plan === "pro" ? "Pro" : "Business";
-  return `You are Alex, a smart and friendly AI assistant built into MailMind. You help ${name} manage their freelance clients and email communications.
+  const today = new Date().toISOString().split("T")[0];
+  return `You are Alex, a smart and friendly AI assistant built into MailMind. You help ${name} manage their freelance workspace — clients and emails.
 
 About ${name}:
 - Plan: ${planLabel}
 - Current clients: ${ctx.totalClients}
+- Today's date: ${today}
 
 What you can do:
-1. Add a new client (name + email required; company and phone optional)
-2. Update an existing client's info (name, email, company, or phone)
-3. Remove a client (always confirm first — this is permanent)
-4. Send an email to a client (draft shown for approval before sending)
-5. Generate a PDF report of activity (24h, 7-day, or 30-day)
+1. List clients
+2. Add a new client (name + email required; company and phone optional)
+3. Update a client's info (name, email, company, or phone)
+4. Remove a client (confirm first — permanent)
+5. List all scheduled (pending) emails
+6. Reschedule a scheduled email to a new date/time
+7. Cancel a scheduled email
+8. Send an email to a client (draft shown for approval before sending)
+9. Generate a PDF report (24h, 7-day, or 30-day)
 
 How to behave:
-- Respond in whatever language the user writes in. If they write in Arabic, reply in Arabic. If Urdu, reply in Urdu. Always match their language.
+- Respond in whatever language the user writes in. Match their language exactly.
 - Be warm, direct, and human. Short sentences. No corporate speak.
-- For destructive actions (remove, send email) — the server will ask for confirmation. You do NOT need to double-ask.
-- For add and update — call the tool directly without asking permission first.
-- If a client name is ambiguous, ask which one before proceeding.
-- If the user asks something outside your scope (weather, coding, etc.), kindly let them know and redirect.
-- Always confirm what you did in a friendly, brief sentence after completing an action.`;
+- For destructive or send actions — the server shows a confirmation. Do NOT double-ask.
+- For add, update, list — call the tool directly.
+- When rescheduling: convert natural dates to ISO 8601 (e.g. "tomorrow 3pm" → "${today.slice(0,8)}${(parseInt(today.slice(8,10))+1).toString().padStart(2,"0")}T15:00:00"). Always use the user's local intent.
+- If an email identifier is ambiguous, ask which one before proceeding.
+- You only have access to workspace data (clients and emails). You do not know or share any personal account details.
+- If the user asks something outside your scope, kindly redirect.
+- Always confirm what you did in a brief friendly sentence.`;
 }
 
 export const AGENT_TOOLS: OpenAI.Chat.Completions.ChatCompletionTool[] = [
+  {
+    type: "function",
+    function: {
+      name: "list_clients",
+      description: "Retrieve the user's full client list with names, emails, companies, and phone numbers",
+      parameters: { type: "object", properties: {}, required: [] },
+    },
+  },
   {
     type: "function",
     function: {
@@ -90,8 +106,50 @@ export const AGENT_TOOLS: OpenAI.Chat.Completions.ChatCompletionTool[] = [
         properties: {
           client_identifier: { type: "string", description: "Client name or email as mentioned by the user" },
           instructions:      { type: "string", description: "What the email should say, in the user's own words" },
+          tone: {
+            type: "string",
+            enum: ["friendly", "formal", "strict", "urgent", "apologetic", "persuasive"],
+            description: "Tone for the email. Use what the user specified, default to friendly.",
+          },
         },
         required: ["client_identifier", "instructions"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "list_scheduled_emails",
+      description: "List all pending scheduled emails — shows subject, recipient client, and scheduled time",
+      parameters: { type: "object", properties: {}, required: [] },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "reschedule_email",
+      description: "Change the scheduled send time of a pending email",
+      parameters: {
+        type: "object",
+        properties: {
+          identifier:       { type: "string", description: "Subject keywords or client name to identify the scheduled email" },
+          new_scheduled_at: { type: "string", description: "New send time in ISO 8601 format (e.g. 2026-06-25T15:00:00)" },
+        },
+        required: ["identifier", "new_scheduled_at"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "cancel_scheduled_email",
+      description: "Cancel a pending scheduled email so it is never sent",
+      parameters: {
+        type: "object",
+        properties: {
+          identifier: { type: "string", description: "Subject keywords or client name to identify which scheduled email to cancel" },
+        },
+        required: ["identifier"],
       },
     },
   },

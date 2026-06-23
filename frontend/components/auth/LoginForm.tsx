@@ -107,7 +107,7 @@ export default function LoginForm() {
 
       <div className="flex justify-end">
         <Link href="/auth/reset" className="text-sm transition-colors" style={{ color: "rgba(99,102,241,0.85)" }}
-          onMouseEnter={e => (e.currentTarget.style.color = "#818cf8")}
+          onMouseEnter={e => (e.currentTarget.style.color = "var(--a-text)")}
           onMouseLeave={e => (e.currentTarget.style.color = "rgba(99,102,241,0.85)")}
         >
           Forgot password?
@@ -119,8 +119,8 @@ export default function LoginForm() {
         disabled={loading}
         className="w-full rounded-xl py-3 text-sm font-bold text-white transition-all hover:-translate-y-0.5 disabled:opacity-60 disabled:cursor-not-allowed"
         style={{
-          background: "linear-gradient(135deg,#2563eb,#4f46e5)",
-          boxShadow: "0 4px 18px rgba(79,70,229,0.4)",
+          background: "var(--a-gradient)",
+          boxShadow: "0 4px 18px var(--a-glow)",
         }}
       >
         {loading ? "Signing in…" : "Sign In"}

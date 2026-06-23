@@ -21,16 +21,17 @@ export default function StatCard({
 }: StatCardProps) {
   return (
     <div
-      className="group relative bg-white rounded-2xl overflow-hidden transition-all duration-200 hover:-translate-y-1"
+      className="group relative rounded-2xl overflow-hidden transition-all duration-200 hover:-translate-y-1"
       style={{
-        border: "1px solid rgba(0,0,0,0.06)",
-        boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
+        background: "var(--bg-surface)",
+        border: "1px solid var(--border)",
+        boxShadow: "var(--shadow-sm)",
       }}
       onMouseEnter={e =>
-        ((e.currentTarget as HTMLDivElement).style.boxShadow = "0 12px 32px rgba(0,0,0,0.1)")
+        ((e.currentTarget as HTMLDivElement).style.boxShadow = "0 12px 32px rgba(0,0,0,0.15)")
       }
       onMouseLeave={e =>
-        ((e.currentTarget as HTMLDivElement).style.boxShadow = "0 1px 4px rgba(0,0,0,0.06)")
+        ((e.currentTarget as HTMLDivElement).style.boxShadow = "var(--shadow-sm)")
       }
     >
       {/* Left accent bar */}

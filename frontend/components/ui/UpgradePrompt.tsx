@@ -53,7 +53,7 @@ export default function UpgradePrompt() {
             className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-5"
             style={{ background: "rgba(99,102,241,0.15)", border: "1px solid rgba(99,102,241,0.25)" }}
           >
-            <svg className="w-7 h-7" fill="none" stroke="#818cf8" viewBox="0 0 24 24">
+            <svg className="w-7 h-7" fill="none" stroke="var(--a-text)" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                 d="M13 10V3L4 14h7v7l9-11h-7z" />
             </svg>
@@ -63,15 +63,15 @@ export default function UpgradePrompt() {
             Plan Limit Reached
           </h2>
           <p className="text-center text-sm mb-5" style={{ color: "#9CA3AF" }}>
-            You&apos;ve used <span style={{ color: "#818cf8", fontWeight: 700 }}>{details.current_count}</span> of your{" "}
-            <span style={{ color: "#818cf8", fontWeight: 700 }}>{details.max_allowed}</span> allowed {limitLabel} on the free plan.
+            You&apos;ve used <span style={{ color: "var(--a-text)", fontWeight: 700 }}>{details.current_count}</span> of your{" "}
+            <span style={{ color: "var(--a-text)", fontWeight: 700 }}>{details.max_allowed}</span> allowed {limitLabel} on the free plan.
           </p>
 
           {/* Usage bar */}
           <div className="mb-5">
             <div className="flex justify-between text-xs mb-1.5" style={{ color: "#6B7280" }}>
               <span>Usage</span>
-              <span style={{ color: pct >= 100 ? "#ef4444" : "#818cf8" }}>{pct}%</span>
+              <span style={{ color: pct >= 100 ? "#ef4444" : "var(--a-text)" }}>{pct}%</span>
             </div>
             <div className="h-2 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.06)" }}>
               <div
@@ -109,7 +109,7 @@ export default function UpgradePrompt() {
               onClick={handleUpgrade}
               disabled={upgrading}
               className="flex w-full items-center justify-center gap-2 rounded-xl py-3 text-sm font-bold text-white transition-all hover:-translate-y-0.5 disabled:opacity-60 animate-btn-glow"
-              style={{ background: "linear-gradient(135deg,#2563eb,#4f46e5)" }}
+              style={{ background: "var(--a-gradient)" }}
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" />

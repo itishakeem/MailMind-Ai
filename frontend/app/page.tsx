@@ -81,7 +81,7 @@ function DashboardMockup() {
         {/* Sidebar */}
         <div className="w-40 shrink-0 border-r flex flex-col py-4 gap-0.5 px-2.5" style={{ borderColor: BORD, background: "#0D0D14" }}>
           <div className="flex items-center gap-2 px-2 mb-4">
-            <div className="h-5 w-5 rounded-md flex items-center justify-center text-[9px] font-black text-white" style={{ background: "linear-gradient(135deg,#2563eb,#4f46e5)" }}>M</div>
+            <div className="h-5 w-5 rounded-md flex items-center justify-center text-[9px] font-black text-white" style={{ background: "var(--a-gradient)" }}>M</div>
             <span className="text-[11px] font-bold" style={{ color: "rgba(255,255,255,0.7)" }}>MailMind AI</span>
           </div>
           {[
@@ -95,15 +95,15 @@ function DashboardMockup() {
               key={label}
               className="rounded-lg px-2.5 py-1.5 text-[11px] font-medium"
               style={active
-                ? { background: `${ACC}22`, color: "#818cf8", borderLeft: "2px solid #4f46e5" }
+                ? { background: `${ACC}22`, color: "var(--a-text)", borderLeft: "2px solid #4f46e5" }
                 : { color: "rgba(255,255,255,0.35)", borderLeft: "2px solid transparent" }}
             >
               {label}
             </div>
           ))}
-          <div className="mt-auto mx-1 rounded-xl p-2.5" style={{ background: "rgba(79,70,229,0.15)", border: "1px solid rgba(79,70,229,0.25)" }}>
+          <div className="mt-auto mx-1 rounded-xl p-2.5" style={{ background: "var(--a-bg)", border: "1px solid rgba(79,70,229,0.25)" }}>
             <p className="text-[9px] font-bold text-indigo-300 mb-1">Free Plan</p>
-            <div className="rounded-md py-1 text-center text-[9px] font-bold text-white" style={{ background: "linear-gradient(135deg,#2563eb,#4f46e5)" }}>
+            <div className="rounded-md py-1 text-center text-[9px] font-bold text-white" style={{ background: "var(--a-gradient)" }}>
               Upgrade ⚡
             </div>
           </div>
@@ -116,7 +116,7 @@ function DashboardMockup() {
               <div className="text-xs font-bold mb-0.5" style={{ color: TXT }}>Welcome back, Ahmed</div>
               <div className="text-[10px]" style={{ color: SEC }}>Your activity overview</div>
             </div>
-            <div className="rounded-lg px-3 py-1.5 text-[10px] font-bold text-white" style={{ background: "linear-gradient(135deg,#2563eb,#4f46e5)" }}>
+            <div className="rounded-lg px-3 py-1.5 text-[10px] font-bold text-white" style={{ background: "var(--a-gradient)" }}>
               + Compose
             </div>
           </div>
@@ -215,7 +215,7 @@ export default function HomePage() {
           <Link
             href="/auth/signup"
             className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl px-7 py-3.5 text-sm font-bold text-white transition-all animate-btn-glow"
-            style={{ background: "linear-gradient(135deg,#2563eb,#4f46e5)" }}
+            style={{ background: "var(--a-gradient)" }}
           >
             Get Started Free <ChevronRight className="h-4 w-4" />
           </Link>
@@ -336,7 +336,7 @@ export default function HomePage() {
                 {plan.highlight && (
                   <span
                     className="mb-3 self-start rounded-full px-3 py-1 text-xs font-bold"
-                    style={{ background: "linear-gradient(135deg,#2563eb,#4f46e5)", color: "#fff" }}
+                    style={{ background: "var(--a-gradient)", color: "#fff" }}
                   >
                     ⚡ Most Popular
                   </span>
@@ -351,7 +351,7 @@ export default function HomePage() {
                 )}
                 <p className="text-base font-bold mb-1" style={{ color: TXT }}>{plan.name}</p>
                 <div className="mb-5 flex items-end gap-1">
-                  <span className="text-4xl font-black" style={{ color: plan.highlight ? "#818cf8" : TXT }}>{plan.price}</span>
+                  <span className="text-4xl font-black" style={{ color: plan.highlight ? "var(--a-text)" : TXT }}>{plan.price}</span>
                   <span className="text-sm mb-1" style={{ color: SEC }}>{plan.period}</span>
                 </div>
                 <ul className="flex-1 space-y-3 mb-6">
@@ -379,7 +379,7 @@ export default function HomePage() {
                     href="/auth/signup"
                     className="block rounded-xl py-3 text-center text-sm font-bold text-white transition-all hover:-translate-y-0.5"
                     style={{
-                      background: plan.highlight ? "linear-gradient(135deg,#2563eb,#4f46e5)" : "rgba(255,255,255,0.06)",
+                      background: plan.highlight ? "var(--a-gradient)" : "rgba(255,255,255,0.06)",
                       boxShadow: plan.highlight ? "0 8px 24px rgba(79,70,229,0.45)" : "none",
                       border: plan.highlight ? "none" : `1px solid ${BORD}`,
                     }}
@@ -436,7 +436,7 @@ export default function HomePage() {
           <Link
             href="/auth/signup"
             className="inline-flex items-center gap-2 rounded-xl px-7 py-3.5 text-sm font-bold text-white transition-all animate-btn-glow"
-            style={{ background: "linear-gradient(135deg,#2563eb,#4f46e5)" }}
+            style={{ background: "var(--a-gradient)" }}
           >
             Get Started Free <ChevronRight className="h-4 w-4" />
           </Link>

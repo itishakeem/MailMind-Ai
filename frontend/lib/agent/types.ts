@@ -29,7 +29,23 @@ export interface PendingUpdateClient {
   updates: { name?: string; email?: string; company?: string; phone?: string };
 }
 
-export type PendingAction = PendingRemoveClient | PendingSendEmail | PendingUpdateClient;
+export interface PendingRescheduleEmail {
+  type: "reschedule_email";
+  email: { id: string; subject: string; client_name: string; old_scheduled_at: string };
+  new_scheduled_at: string;
+}
+
+export interface PendingCancelScheduledEmail {
+  type: "cancel_scheduled_email";
+  email: { id: string; subject: string; client_name: string; scheduled_at: string };
+}
+
+export type PendingAction =
+  | PendingRemoveClient
+  | PendingSendEmail
+  | PendingUpdateClient
+  | PendingRescheduleEmail
+  | PendingCancelScheduledEmail;
 
 // ── API request ───────────────────────────────────────────────────────────────
 

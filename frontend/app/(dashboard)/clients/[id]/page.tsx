@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
@@ -14,15 +14,15 @@ type EmailHistoryItem = Pick<
 >;
 
 const cardStyle: React.CSSProperties = {
-  background: "#fff",
+  background: "var(--bg-surface)",
   borderRadius: "16px",
-  border: "1px solid rgba(0,0,0,0.06)",
-  boxShadow: "0 1px 4px rgba(0,0,0,0.05)",
+  border: "1px solid var(--border)",
+  boxShadow: "var(--shadow-sm)",
 };
 
 const gradientBtn: React.CSSProperties = {
-  background: "linear-gradient(135deg,#2563eb,#4f46e5)",
-  boxShadow: "0 4px 14px rgba(79,70,229,0.3)",
+  background: "var(--a-gradient)",
+  boxShadow: "0 4px 14px var(--a-glow)",
 };
 
 export default function ClientDetailPage() {
@@ -78,7 +78,7 @@ export default function ClientDetailPage() {
     return (
       <div className="text-center py-16 text-gray-500">
         <p className="font-medium">Client not found.</p>
-        <Link href="/clients" className="mt-3 inline-block text-sm" style={{ color: "#4f46e5" }}>
+        <Link href="/clients" className="mt-3 inline-block text-sm" style={{ color: "var(--a-to)" }}>
           Back to Clients
         </Link>
       </div>
@@ -100,7 +100,7 @@ export default function ClientDetailPage() {
           <div className="flex items-center gap-4">
             <div
               className="w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold text-white shrink-0"
-              style={{ background: "linear-gradient(135deg,#2563eb,#4f46e5)" }}
+              style={{ background: "var(--a-gradient)" }}
             >
               {client.name.charAt(0).toUpperCase()}
             </div>

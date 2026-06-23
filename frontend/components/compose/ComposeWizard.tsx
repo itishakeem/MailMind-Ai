@@ -5,6 +5,7 @@ import PDFUpload from "@/components/compose/PDFUpload";
 import ToneSelector from "@/components/compose/ToneSelector";
 import AIPreview from "@/components/compose/AIPreview";
 import TemplatePicker from "@/components/compose/TemplatePicker";
+import { createClient } from "@/lib/supabase/client";
 import type { Client, EmailTemplate, EmailType, Tone } from "@/types";
 
 interface ComposeWizardProps {
@@ -151,8 +152,19 @@ export default function ComposeWizard({
     setRegenerating(false);
   }
 
+  async function ensureSession(): Promise<boolean> {
+    const supabase = createClient();
+    const { error } = await supabase.auth.refreshSession();
+    if (error) {
+      setStepError("Your session has expired. Please refresh the page and try again.");
+      return false;
+    }
+    return true;
+  }
+
   async function handleSendNow() {
     if (!selectedClientId) return;
+    if (!(await ensureSession())) return;
     setSending(true);
     const res = await fetch("/api/emails/send", {
       method: "POST",
@@ -168,6 +180,10 @@ export default function ComposeWizard({
 
     setSending(false);
 
+    if (res.status === 401) {
+      setStepError("Your session has expired. Please refresh the page and try again.");
+      return;
+    }
     if (res.status === 402) {
       const data = await res.json();
       setStepError(data.error ?? "Email limit reached. Please upgrade your plan.");
@@ -186,6 +202,7 @@ export default function ComposeWizard({
 
   async function handleSchedule(scheduledAt: string) {
     if (!selectedClientId) return;
+    if (!(await ensureSession())) return;
     setScheduling(true);
     const res = await fetch("/api/emails/schedule", {
       method: "POST",
@@ -202,6 +219,10 @@ export default function ComposeWizard({
 
     setScheduling(false);
 
+    if (res.status === 401) {
+      setStepError("Your session has expired. Please refresh the page and try again.");
+      return;
+    }
     if (!res.ok) {
       const data = await res.json();
       setStepError(data.error ?? "Failed to schedule email.");

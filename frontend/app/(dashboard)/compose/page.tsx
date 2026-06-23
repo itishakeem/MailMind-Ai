@@ -6,7 +6,7 @@ import { CheckCircle2, Clock } from "lucide-react";
 import ComposeWizard from "@/components/compose/ComposeWizard";
 
 const gradientBtn: React.CSSProperties = {
-  background: "linear-gradient(135deg,#2563eb,#4f46e5)",
+  background: "var(--a-gradient)",
   boxShadow: "0 4px 14px rgba(79,70,229,0.35)",
 };
 
@@ -30,7 +30,7 @@ function ComposePageInner() {
         >
           {isSent
             ? <CheckCircle2 className="w-8 h-8" style={{ color: "#22c55e" }} />
-            : <Clock        className="w-8 h-8" style={{ color: "#818cf8" }} />
+            : <Clock        className="w-8 h-8" style={{ color: "var(--a-text)" }} />
           }
         </div>
         <h2 className="text-2xl font-extrabold text-gray-900">

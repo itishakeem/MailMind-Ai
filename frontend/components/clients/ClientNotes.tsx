@@ -60,7 +60,7 @@ export default function ClientNotes({ clientId, isPro }: ClientNotesProps) {
         <a
           href="/profile"
           className="inline-flex items-center gap-1 text-xs font-bold rounded-lg px-3 py-1.5 text-white"
-          style={{ background: "linear-gradient(135deg,#2563eb,#4f46e5)" }}
+          style={{ background: "var(--a-gradient)" }}
         >
           ⚡ Upgrade to Pro
         </a>
@@ -90,7 +90,7 @@ export default function ClientNotes({ clientId, isPro }: ClientNotesProps) {
             onClick={handleAdd}
             disabled={saving || !noteText.trim()}
             className="px-3 py-1.5 text-xs font-bold text-white rounded-lg transition-all hover:-translate-y-0.5 disabled:opacity-50"
-            style={{ background: "linear-gradient(135deg,#2563eb,#4f46e5)" }}
+            style={{ background: "var(--a-gradient)" }}
           >
             {saving ? "Saving…" : "Add Note"}
           </button>

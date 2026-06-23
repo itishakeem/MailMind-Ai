@@ -66,7 +66,7 @@ export default function MarketingNav() {
             href="/auth/signup"
             className="rounded-lg px-4 py-2 text-sm font-medium text-white transition-colors"
             style={{ background: "#6366F1" }}
-            onMouseEnter={e => (e.currentTarget.style.background = "#4F46E5")}
+            onMouseEnter={e => (e.currentTarget.style.background = "var(--a-to)")}
             onMouseLeave={e => (e.currentTarget.style.background = "#6366F1")}
           >
             Get Started

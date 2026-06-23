@@ -145,11 +145,24 @@ Best regards,
 - **Send Now** — Send immediately
 - **Schedule** — Set a date & time, sends automatically
 
+### Alex — AI Chat Agent
+- Conversational AI assistant embedded in the dashboard
+- Available to all plans (Free: 10 messages/24 hrs, Pro/Business: unlimited)
+- Responds in the user's own language (English, Urdu, Arabic, etc.)
+- **6 agent tools:**
+  1. List clients
+  2. Add a client (name + email required; company & phone optional)
+  3. Update a client's info (name, email, company, phone)
+  4. Remove a client (always confirms before deleting)
+  5. Send an email to a client (shows draft for approval before sending)
+  6. Generate a PDF activity report (last 24h, 7-day, or 30-day)
+- Chat history persisted per session (up to 15 sessions saved locally)
+
 ### Dashboard & Analytics
 - Total emails sent this month
 - Pending scheduled emails
 - Per client activity
-- AI monthly summary
+- Free plan usage rings (emails & clients)
 
 ---
 
@@ -200,8 +213,8 @@ Best regards,
 | Layer | Technology | Cost |
 |---|---|---|
 | **Frontend** | Next.js 14 + Tailwind CSS | Free |
-| **AI Model** | Gemini Flash (via OpenRouter) | $5 = 50,000 emails |
-| **AI Fallback** | Nemotron 3 Super (NVIDIA) | Free (200 req/day) |
+| **AI (Pro/Business)** | Gemini 2.5 Flash via OpenRouter | $5 = 50,000 emails |
+| **AI (Free tier)** | OpenRouter Auto (best free model) | Free |
 | **Database** | Supabase (PostgreSQL) | Free tier |
 | **Auth** | Supabase Auth + Google OAuth | Free |
 | **Gmail** | Google Gmail API (OAuth 2.0) | Free |
@@ -239,8 +252,7 @@ users
 ├── name
 ├── email
 ├── plan (free/pro/business)
-├── gmail_access_token
-├── gmail_refresh_token
+├── gmail_token
 └── created_at
 
 clients
@@ -269,6 +281,12 @@ documents
 ├── filename
 ├── extracted_text
 └── uploaded_at
+
+agent_message_logs
+├── id
+├── user_id
+└── created_at
+  (used for free-tier rate limiting: max 10 messages per 24 hours)
 ```
 
 ---
@@ -280,21 +298,24 @@ documents
 - 3 clients
 - Basic AI email generation
 - Gmail connect
+- Alex AI agent (10 messages/day)
 
-### Pro — Rs. 999/month
+### Pro — Rs. 999/month ($9.99/month)
 - Unlimited emails
 - Unlimited clients
 - PDF upload & AI detection
 - Schedule feature
 - Full email history
 - Tone adjustment
+- Alex AI agent (unlimited, Gemini 2.5 Flash)
 
-### Business — Rs. 2,499/month
+### Business — Rs. 2,499/month ($19.99/month)
 - Everything in Pro
 - Team members (up to 5)
 - Priority support
 - Advanced analytics
 - Custom email signature
+- Alex AI agent (unlimited, Gemini 2.5 Flash)
 
 ---
 

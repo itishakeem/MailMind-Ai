@@ -162,6 +162,73 @@ export async function handleSendEmail(
   };
 }
 
+export async function handleRescheduleEmail(
+  supabase: SupabaseClient,
+  userId: string,
+  emailId: string,
+  newScheduledAt: string
+): Promise<AgentActionResultResponse> {
+  const newDate = new Date(newScheduledAt);
+  if (isNaN(newDate.getTime()) || newDate <= new Date(Date.now() + 60 * 1000)) {
+    return { type: "action_result", content: "The new time must be at least 1 minute in the future.", success: false };
+  }
+
+  const { data: email } = await supabase
+    .from("emails")
+    .select("subject")
+    .eq("id", emailId)
+    .eq("user_id", userId)
+    .single();
+
+  const { error } = await supabase
+    .from("emails")
+    .update({ scheduled_at: newDate.toISOString() })
+    .eq("id", emailId)
+    .eq("user_id", userId)
+    .eq("status", "scheduled");
+
+  if (error) {
+    return { type: "action_result", content: "Couldn't reschedule the email. Please try again.", success: false };
+  }
+
+  const dateStr = newDate.toLocaleString("en-PK", { dateStyle: "medium", timeStyle: "short" });
+  return {
+    type: "action_result",
+    content: `"${email?.subject ?? "Email"}" rescheduled to ${dateStr}. ✓`,
+    success: true,
+  };
+}
+
+export async function handleCancelScheduledEmail(
+  supabase: SupabaseClient,
+  userId: string,
+  emailId: string
+): Promise<AgentActionResultResponse> {
+  const { data: email } = await supabase
+    .from("emails")
+    .select("subject")
+    .eq("id", emailId)
+    .eq("user_id", userId)
+    .single();
+
+  const { error } = await supabase
+    .from("emails")
+    .update({ status: "cancelled" })
+    .eq("id", emailId)
+    .eq("user_id", userId)
+    .eq("status", "scheduled");
+
+  if (error) {
+    return { type: "action_result", content: "Couldn't cancel the email. Please try again.", success: false };
+  }
+
+  return {
+    type: "action_result",
+    content: `"${email?.subject ?? "Email"}" cancelled. ✓`,
+    success: true,
+  };
+}
+
 export async function handleGenerateReport(
   supabase: SupabaseClient,
   userId: string,

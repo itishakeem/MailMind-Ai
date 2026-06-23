@@ -4,15 +4,15 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 
 const cardStyle: React.CSSProperties = {
-  background: "#fff",
+  background: "var(--bg-surface)",
   borderRadius: "16px",
-  border: "1px solid rgba(0,0,0,0.06)",
-  boxShadow: "0 1px 4px rgba(0,0,0,0.05)",
+  border: "1px solid var(--border)",
+  boxShadow: "var(--shadow-sm)",
 };
 
 const gradientBtn: React.CSSProperties = {
-  background: "linear-gradient(135deg,#2563eb,#4f46e5)",
-  boxShadow: "0 4px 14px rgba(79,70,229,0.3)",
+  background: "var(--a-gradient)",
+  boxShadow: "0 4px 14px var(--a-glow)",
 };
 
 interface GmailStatus {
@@ -138,7 +138,7 @@ export default function SettingsPage() {
           rows={4}
           placeholder={"Best regards,\nAhmed Khan\nFreelance Web Developer"}
           className="w-full rounded-xl px-3 py-2.5 text-sm resize-none focus:outline-none transition-colors"
-          style={{ border: "1px solid rgba(0,0,0,0.1)", background: "#fafafa" }}
+          style={{ border: "1px solid var(--border-2)", background: "var(--bg-input)", color: "var(--text-1)" }}
           onFocus={e => (e.currentTarget.style.borderColor = "rgba(79,70,229,0.5)")}
           onBlur={e => (e.currentTarget.style.borderColor = "rgba(0,0,0,0.1)")}
         />

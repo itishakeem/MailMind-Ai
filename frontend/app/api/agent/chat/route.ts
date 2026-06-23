@@ -8,11 +8,14 @@ import {
   handleUpdateClient,
   handleRemoveClient,
   handleSendEmail,
+  handleRescheduleEmail,
+  handleCancelScheduledEmail,
   handleGenerateReport,
 } from "@/lib/agent/handlers";
 import { generateEmail, AIUnavailableError } from "@/lib/ai/generate";
 import type { AgentChatRequest, AgentResponse } from "@/lib/agent/types";
 import type { ReportPeriod } from "@/lib/agent/report";
+import type { Tone } from "@/types";
 
 const FREE_DAILY_LIMIT = 10;
 
@@ -21,9 +24,7 @@ function openRouter(plan: string) {
   const apiKey = isFree
     ? process.env.OPENROUTER_API_KEY_FREE
     : process.env.OPENROUTER_API_KEY;
-  if (!apiKey) {
-    throw new Error(isFree ? "OPENROUTER_API_KEY_FREE not configured" : "OPENROUTER_API_KEY not configured");
-  }
+  if (!apiKey) throw new Error(isFree ? "OPENROUTER_API_KEY_FREE not configured" : "OPENROUTER_API_KEY not configured");
   return new OpenAI({
     baseURL: "https://openrouter.ai/api/v1",
     apiKey,
@@ -87,6 +88,16 @@ export async function POST(request: NextRequest) {
       const result = await handleSendEmail(supabase, user.id, action.client, action.draft);
       return NextResponse.json(result satisfies AgentResponse);
     }
+
+    if (action.type === "reschedule_email") {
+      const result = await handleRescheduleEmail(supabase, user.id, action.email.id, action.new_scheduled_at);
+      return NextResponse.json(result satisfies AgentResponse);
+    }
+
+    if (action.type === "cancel_scheduled_email") {
+      const result = await handleCancelScheduledEmail(supabase, user.id, action.email.id);
+      return NextResponse.json(result satisfies AgentResponse);
+    }
   }
 
   // ── Rate limit: free users get FREE_DAILY_LIMIT messages per 24 hours ─────
@@ -132,8 +143,13 @@ export async function POST(request: NextRequest) {
       tool_choice: "auto",
     });
   } catch (err) {
-    console.error("[agent] AI call failed:", (err as Error).message);
-    return NextResponse.json({ error: "AI service unavailable" }, { status: 503 });
+    const msg = (err as Error).message;
+    console.error("[agent] AI call failed:", msg);
+    const isAuthErr = msg.includes("401") || msg.includes("403") || msg.toLowerCase().includes("auth");
+    return NextResponse.json(
+      { error: isAuthErr ? "AI service authentication failed." : "AI service unavailable. Please try again." },
+      { status: 503 }
+    );
   }
 
   // Log message for free-tier rate limiting (after successful AI call)
@@ -159,6 +175,33 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       type: "text",
       content: "I had trouble understanding that. Could you rephrase?",
+    } satisfies AgentResponse);
+  }
+
+  // ── list_clients ──────────────────────────────────────────────────────────
+
+  if (toolName === "list_clients") {
+    const { data: clients } = await supabase
+      .from("clients")
+      .select("name, email, company, phone")
+      .eq("user_id", user.id)
+      .order("name");
+
+    if (!clients || clients.length === 0) {
+      return NextResponse.json({
+        type: "text",
+        content: "You don't have any clients yet. Want me to add one?",
+      } satisfies AgentResponse);
+    }
+
+    const lines = clients.map((c, i) => {
+      const extras = [c.company, c.phone].filter(Boolean).join(" · ");
+      return `${i + 1}. **${c.name}** — ${c.email}${extras ? `  (${extras})` : ""}`;
+    });
+
+    return NextResponse.json({
+      type: "text",
+      content: `You have ${clients.length} client${clients.length === 1 ? "" : "s"}:\n\n${lines.join("\n")}`,
     } satisfies AgentResponse);
   }
 
@@ -298,12 +341,13 @@ export async function POST(request: NextRequest) {
     }
 
     const match = matches[0];
+    const tone = (toolArgs.tone ?? "friendly") as Tone;
     let draft: { subject: string; body: string };
     try {
       const result = await generateEmail({
         text: instructions,
         type: "manual",
-        tone: "friendly",
+        tone,
         clientName: match.name,
         senderName: profile.name ?? undefined,
         isPro: profile.plan !== "free",
@@ -329,6 +373,146 @@ export async function POST(request: NextRequest) {
         type: "send_email",
         client: { id: match.id, name: match.name, email: match.email },
         draft,
+      },
+    } satisfies AgentResponse);
+  }
+
+  // ── list_scheduled_emails ─────────────────────────────────────────────────────
+
+  if (toolName === "list_scheduled_emails") {
+    const { data: scheduled } = await supabase
+      .from("emails")
+      .select("id, subject, client_snapshot, scheduled_at")
+      .eq("user_id", user.id)
+      .eq("status", "scheduled")
+      .order("scheduled_at");
+
+    if (!scheduled || scheduled.length === 0) {
+      return NextResponse.json({
+        type: "text",
+        content: "You have no scheduled emails right now.",
+      } satisfies AgentResponse);
+    }
+
+    const lines = scheduled.map((e, i) => {
+      const clientName = (e.client_snapshot as { name?: string })?.name ?? "Unknown";
+      const dateStr = new Date(e.scheduled_at as string).toLocaleString("en-PK", { dateStyle: "medium", timeStyle: "short" });
+      return `${i + 1}. **${e.subject}** → ${clientName} — ${dateStr}`;
+    });
+
+    return NextResponse.json({
+      type: "text",
+      content: `You have ${scheduled.length} scheduled email${scheduled.length === 1 ? "" : "s"}:\n\n${lines.join("\n")}`,
+    } satisfies AgentResponse);
+  }
+
+  // ── reschedule_email ──────────────────────────────────────────────────────────
+
+  if (toolName === "reschedule_email") {
+    const identifier     = toolArgs.identifier       ?? "";
+    const newScheduledAt = toolArgs.new_scheduled_at ?? "";
+
+    const newDate = new Date(newScheduledAt);
+    if (isNaN(newDate.getTime()) || newDate <= new Date(Date.now() + 60 * 1000)) {
+      return NextResponse.json({
+        type: "text",
+        content: "Please give me a valid date/time at least 1 minute in the future.",
+      } satisfies AgentResponse);
+    }
+
+    const { data: scheduled } = await supabase
+      .from("emails")
+      .select("id, subject, client_snapshot, scheduled_at")
+      .eq("user_id", user.id)
+      .eq("status", "scheduled");
+
+    const reschedMatches = (scheduled ?? []).filter(e => {
+      const clientName = (e.client_snapshot as { name?: string })?.name?.toLowerCase() ?? "";
+      return (e.subject as string)?.toLowerCase().includes(identifier.toLowerCase()) ||
+             clientName.includes(identifier.toLowerCase());
+    });
+
+    if (reschedMatches.length === 0) {
+      return NextResponse.json({
+        type: "text",
+        content: `No scheduled email found matching "${identifier}". Ask me to "check scheduled emails" to see all pending ones.`,
+      } satisfies AgentResponse);
+    }
+
+    if (reschedMatches.length > 1) {
+      const list = reschedMatches.map((e, i) => {
+        const cn = (e.client_snapshot as { name?: string })?.name ?? "Unknown";
+        const ds = new Date(e.scheduled_at as string).toLocaleString("en-PK", { dateStyle: "medium", timeStyle: "short" });
+        return `${i + 1}. "${e.subject}" → ${cn} — ${ds}`;
+      }).join("\n");
+      return NextResponse.json({
+        type: "text",
+        content: `Found ${reschedMatches.length} matches. Which one did you mean?\n\n${list}`,
+      } satisfies AgentResponse);
+    }
+
+    const rm = reschedMatches[0];
+    const rmClient = (rm.client_snapshot as { name?: string })?.name ?? "Unknown";
+    const oldStr = new Date(rm.scheduled_at as string).toLocaleString("en-PK", { dateStyle: "medium", timeStyle: "short" });
+    const newStr = newDate.toLocaleString("en-PK", { dateStyle: "medium", timeStyle: "short" });
+
+    return NextResponse.json({
+      type: "confirmation",
+      content: `Reschedule "${rm.subject}" (to ${rmClient}) from ${oldStr} to ${newStr}?`,
+      pendingAction: {
+        type: "reschedule_email",
+        email: { id: rm.id as string, subject: rm.subject as string, client_name: rmClient, old_scheduled_at: rm.scheduled_at as string },
+        new_scheduled_at: newDate.toISOString(),
+      },
+    } satisfies AgentResponse);
+  }
+
+  // ── cancel_scheduled_email ────────────────────────────────────────────────────
+
+  if (toolName === "cancel_scheduled_email") {
+    const identifier = toolArgs.identifier ?? "";
+
+    const { data: scheduled } = await supabase
+      .from("emails")
+      .select("id, subject, client_snapshot, scheduled_at")
+      .eq("user_id", user.id)
+      .eq("status", "scheduled");
+
+    const cancelMatches = (scheduled ?? []).filter(e => {
+      const clientName = (e.client_snapshot as { name?: string })?.name?.toLowerCase() ?? "";
+      return (e.subject as string)?.toLowerCase().includes(identifier.toLowerCase()) ||
+             clientName.includes(identifier.toLowerCase());
+    });
+
+    if (cancelMatches.length === 0) {
+      return NextResponse.json({
+        type: "text",
+        content: `No scheduled email found matching "${identifier}".`,
+      } satisfies AgentResponse);
+    }
+
+    if (cancelMatches.length > 1) {
+      const list = cancelMatches.map((e, i) => {
+        const cn = (e.client_snapshot as { name?: string })?.name ?? "Unknown";
+        const ds = new Date(e.scheduled_at as string).toLocaleString("en-PK", { dateStyle: "medium", timeStyle: "short" });
+        return `${i + 1}. "${e.subject}" → ${cn} — ${ds}`;
+      }).join("\n");
+      return NextResponse.json({
+        type: "text",
+        content: `Found ${cancelMatches.length} matches. Which one to cancel?\n\n${list}`,
+      } satisfies AgentResponse);
+    }
+
+    const cm = cancelMatches[0];
+    const cmClient = (cm.client_snapshot as { name?: string })?.name ?? "Unknown";
+    const cmDate = new Date(cm.scheduled_at as string).toLocaleString("en-PK", { dateStyle: "medium", timeStyle: "short" });
+
+    return NextResponse.json({
+      type: "confirmation",
+      content: `Cancel "${cm.subject}" to ${cmClient} (scheduled for ${cmDate})?`,
+      pendingAction: {
+        type: "cancel_scheduled_email",
+        email: { id: cm.id as string, subject: cm.subject as string, client_name: cmClient, scheduled_at: cm.scheduled_at as string },
       },
     } satisfies AgentResponse);
   }

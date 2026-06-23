@@ -63,7 +63,7 @@ export default function TemplatePicker({ onSelect, onSave, canSave }: TemplatePi
         type="button"
         onClick={handleOpen}
         className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors"
-        style={{ background: "rgba(99,102,241,0.08)", border: "1px solid rgba(99,102,241,0.25)", color: "#4f46e5" }}
+        style={{ background: "rgba(99,102,241,0.08)", border: "1px solid rgba(99,102,241,0.25)", color: "var(--a-to)" }}
       >
         <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h10" />
@@ -94,7 +94,7 @@ export default function TemplatePicker({ onSelect, onSave, canSave }: TemplatePi
             <button
               onClick={() => { setView("save"); setError(null); }}
               className="text-xs font-semibold px-2.5 py-1 rounded-lg transition-colors"
-              style={{ background: "rgba(99,102,241,0.08)", color: "#4f46e5" }}
+              style={{ background: "rgba(99,102,241,0.08)", color: "var(--a-to)" }}
             >
               + Save current
             </button>
@@ -123,7 +123,7 @@ export default function TemplatePicker({ onSelect, onSave, canSave }: TemplatePi
               onClick={handleSave}
               disabled={saving || !newName.trim()}
               className="w-full rounded-lg py-2 text-sm font-bold text-white transition-all hover:-translate-y-0.5 disabled:opacity-50"
-              style={{ background: "linear-gradient(135deg,#2563eb,#4f46e5)" }}
+              style={{ background: "var(--a-gradient)" }}
             >
               {saving ? "Saving…" : "Save Template"}
             </button>

@@ -19,8 +19,8 @@ interface PlanLimitError {
 }
 
 const gradientBtn: React.CSSProperties = {
-  background: "linear-gradient(135deg,#2563eb,#4f46e5)",
-  boxShadow: "0 4px 14px rgba(79,70,229,0.3)",
+  background: "var(--a-gradient)",
+  boxShadow: "0 4px 14px var(--a-glow)",
 };
 
 export default function ClientsPage() {
@@ -97,7 +97,7 @@ export default function ClientsPage() {
         ) : clients.length === 0 ? (
           <div className="text-center py-20">
             <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full" style={{ background: "rgba(79,70,229,0.08)" }}>
-              <Users className="h-7 w-7" style={{ color: "#4f46e5" }} />
+              <Users className="h-7 w-7" style={{ color: "var(--a-to)" }} />
             </div>
             <p className="text-sm font-semibold text-gray-600">No clients yet.</p>
             <p className="text-xs text-gray-400 mt-1">Add your first client to get started.</p>

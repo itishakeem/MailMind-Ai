@@ -4,7 +4,7 @@ const CONFIGS = {
   pro: {
     label:  "PRO",
     bg:     "rgba(79,70,229,0.18)",
-    color:  "#818cf8",
+    color:  "var(--a-text)",
     border: "rgba(99,102,241,0.45)",
   },
   business: {

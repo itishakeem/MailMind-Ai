@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Clock } from "lucide-react";
 import Skeleton from "@/components/ui/Skeleton";
 import type { Email } from "@/types";
@@ -16,10 +16,10 @@ const STATUS_STYLE: Record<string, React.CSSProperties> = {
 };
 
 const cardStyle: React.CSSProperties = {
-  background: "#fff",
+  background: "var(--bg-surface)",
   borderRadius: "16px",
-  border: "1px solid rgba(0,0,0,0.06)",
-  boxShadow: "0 1px 4px rgba(0,0,0,0.05)",
+  border: "1px solid var(--border)",
+  boxShadow: "var(--shadow-sm)",
 };
 
 function formatDateTime(iso: string | null | undefined): string {
@@ -32,12 +32,39 @@ export default function ScheduledPage() {
   const [loading,       setLoading]       = useState(true);
   const [reschedulingId,setReschedulingId]= useState<string | null>(null);
   const [newDatetime,   setNewDatetime]   = useState<Record<string, string>>({});
+  const flushed = useRef(false);
 
   useEffect(() => {
-    fetch("/api/emails/scheduled")
-      .then(r => r.json())
-      .then(d => { setEmails(d.emails ?? []); setLoading(false); })
-      .catch(() => setLoading(false));
+    if (flushed.current) return;
+    flushed.current = true;
+
+    async function loadAndFlush() {
+      try {
+        const r = await fetch("/api/emails/scheduled");
+        const d = await r.json();
+        const loaded: ScheduledEmail[] = d.emails ?? [];
+        setEmails(loaded);
+
+        // If any scheduled email is past due, flush it immediately.
+        // This covers local dev (where the Vercel cron doesn't run) and acts as a
+        // fast-path fallback in production before the 5-minute cron fires.
+        const hasDue = loaded.some(
+          e => e.status === "scheduled" && e.scheduled_at && new Date(e.scheduled_at) <= new Date()
+        );
+        if (hasDue) {
+          const flush = await fetch("/api/emails/flush-due", { method: "POST" });
+          if (flush.ok) {
+            // Reload the list after flushing so sent/failed emails disappear
+            const r2 = await fetch("/api/emails/scheduled");
+            const d2 = await r2.json();
+            setEmails(d2.emails ?? []);
+          }
+        }
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadAndFlush();
   }, []);
 
   async function handleCancel(id: string) {
@@ -102,7 +129,7 @@ export default function ScheduledPage() {
         {emails.length === 0 ? (
           <div className="text-center py-20">
             <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full" style={{ background: "rgba(79,70,229,0.08)" }}>
-              <Clock className="h-7 w-7" style={{ color: "#4f46e5" }} />
+              <Clock className="h-7 w-7" style={{ color: "var(--a-to)" }} />
             </div>
             <p className="text-sm font-semibold text-gray-600">No scheduled emails.</p>
             <p className="text-xs text-gray-400 mt-1">Schedule an email from the Compose page.</p>
@@ -153,9 +180,9 @@ export default function ScheduledPage() {
                         <div className="flex flex-col gap-1">
                           {email.status === "failed" && (
                             <button onClick={() => handleRetry(email.id)}
-                              className="text-xs font-medium text-left transition-colors" style={{ color: "#4f46e5" }}
+                              className="text-xs font-medium text-left transition-colors" style={{ color: "var(--a-to)" }}
                               onMouseEnter={e => (e.currentTarget.style.color = "#4338ca")}
-                              onMouseLeave={e => (e.currentTarget.style.color = "#4f46e5")}
+                              onMouseLeave={e => (e.currentTarget.style.color = "var(--a-to)")}
                             >
                               Retry
                             </button>
@@ -173,7 +200,7 @@ export default function ScheduledPage() {
                                     style={{ border: "1px solid rgba(0,0,0,0.12)" }}
                                   />
                                   <button onClick={() => handleReschedule(email.id)}
-                                    className="text-xs font-medium" style={{ color: "#4f46e5" }}>
+                                    className="text-xs font-medium" style={{ color: "var(--a-to)" }}>
                                     Save
                                   </button>
                                   <button onClick={() => setReschedulingId(null)}

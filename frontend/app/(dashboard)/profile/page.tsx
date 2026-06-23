@@ -8,20 +8,20 @@ import ProBadge from "@/components/ui/ProBadge";
 import { createClient } from "@/lib/supabase/client";
 
 const cardStyle: React.CSSProperties = {
-  background: "#fff",
+  background: "var(--bg-surface)",
   borderRadius: "16px",
-  border: "1px solid rgba(0,0,0,0.06)",
-  boxShadow: "0 1px 4px rgba(0,0,0,0.05)",
+  border: "1px solid var(--border)",
+  boxShadow: "var(--shadow-sm)",
 };
 
 const gradientBtn: React.CSSProperties = {
-  background: "linear-gradient(135deg,#2563eb,#4f46e5)",
-  boxShadow: "0 4px 14px rgba(79,70,229,0.3)",
+  background: "var(--a-gradient)",
+  boxShadow: "0 4px 14px var(--a-glow)",
 };
 
 const PLAN_STYLE: Record<string, React.CSSProperties> = {
   free:     { background: "rgba(148,163,184,0.12)", color: "#64748b",  border: "1px solid rgba(148,163,184,0.25)" },
-  pro:      { background: "rgba(79,70,229,0.12)",   color: "#4f46e5",  border: "1px solid rgba(79,70,229,0.3)"   },
+  pro:      { background: "rgba(79,70,229,0.12)",   color: "var(--a-to)",  border: "1px solid var(--a-glow)"   },
   business: { background: "rgba(124,58,237,0.12)",  color: "#7c3aed",  border: "1px solid rgba(124,58,237,0.3)"  },
 };
 
@@ -41,7 +41,7 @@ function StatPill({ icon: Icon, label, value }: { icon: React.ElementType; label
   return (
     <div style={cardStyle} className="flex items-center gap-3 p-4">
       <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl" style={{ background: "rgba(79,70,229,0.08)" }}>
-        <Icon className="h-4 w-4" style={{ color: "#4f46e5" }} />
+        <Icon className="h-4 w-4" style={{ color: "var(--a-to)" }} />
       </div>
       <div>
         <p className="text-xs text-gray-400">{label}</p>
@@ -187,7 +187,7 @@ export default function ProfilePage() {
           {/* Avatar */}
           <div
             className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl text-2xl font-extrabold text-white"
-            style={{ background: "linear-gradient(135deg,#2563eb,#4f46e5)" }}
+            style={{ background: "var(--a-gradient)" }}
           >
             {initials}
           </div>
@@ -202,8 +202,10 @@ export default function ProfilePage() {
                     onChange={e => setNameVal(e.target.value)}
                     className="flex-1 rounded-lg px-3 py-1.5 text-sm font-semibold text-gray-900 focus:outline-none transition-colors"
                     style={{
-                      border: focused ? "1px solid rgba(79,70,229,0.6)" : "1px solid rgba(0,0,0,0.12)",
-                      boxShadow: focused ? "0 0 0 3px rgba(79,70,229,0.15)" : "none",
+                      border: focused ? "1px solid rgba(var(--a-rgb),0.6)" : "1px solid var(--border-2)",
+                      boxShadow: focused ? "0 0 0 3px rgba(var(--a-rgb),0.15)" : "none",
+                      background: "var(--bg-input)",
+                      color: "var(--text-1)",
                     }}
                     onFocus={() => setFocused(true)}
                     onBlur={() => setFocused(false)}
@@ -275,7 +277,7 @@ export default function ProfilePage() {
                 <button
                   onClick={handleUpgrade}
                   className="inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-sm font-bold text-white transition-all hover:-translate-y-0.5 animate-btn-glow"
-                  style={{ background: "linear-gradient(135deg,#2563eb,#4f46e5)" }}
+                  style={{ background: "var(--a-gradient)" }}
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
@@ -289,7 +291,7 @@ export default function ProfilePage() {
                   style={{
                     background: "rgba(99,102,241,0.08)",
                     border: "1px solid rgba(99,102,241,0.3)",
-                    color: "#4f46e5",
+                    color: "var(--a-to)",
                   }}
                 >
                   Manage Subscription
@@ -312,7 +314,7 @@ export default function ProfilePage() {
         <div className="flex items-center justify-between mb-1">
           <h3 className="text-sm font-bold text-gray-900">Email Signature</h3>
           {(profile.plan === "pro" || profile.plan === "business") && (
-            <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: "rgba(99,102,241,0.1)", color: "#4f46e5" }}>Pro</span>
+            <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: "rgba(99,102,241,0.1)", color: "var(--a-to)" }}>Pro</span>
           )}
         </div>
         {profile.plan === "free" ? (
@@ -324,7 +326,7 @@ export default function ProfilePage() {
             <button
               onClick={handleUpgrade}
               className="inline-flex items-center gap-1 text-xs font-bold rounded-lg px-3 py-1.5 text-white"
-              style={{ background: "linear-gradient(135deg,#2563eb,#4f46e5)" }}
+              style={{ background: "var(--a-gradient)" }}
             >
               ⚡ Upgrade to Pro
             </button>
@@ -340,8 +342,10 @@ export default function ProfilePage() {
               placeholder={"Best regards,\nYour Name\nYour Title | yoursite.com | +92 300 000 0000"}
               className="w-full rounded-xl px-3 py-2.5 text-sm resize-none focus:outline-none transition-colors"
               style={{
-                border: sigFocused ? "1px solid rgba(79,70,229,0.5)" : "1px solid rgba(0,0,0,0.12)",
-                boxShadow: sigFocused ? "0 0 0 3px rgba(79,70,229,0.1)" : "none",
+                border: sigFocused ? "1px solid rgba(var(--a-rgb),0.5)" : "1px solid var(--border-2)",
+                boxShadow: sigFocused ? "0 0 0 3px rgba(var(--a-rgb),0.1)" : "none",
+                background: "var(--bg-input)",
+                color: "var(--text-1)",
               }}
               onFocus={() => setSigFocused(true)}
               onBlur={() => setSigFocused(false)}
@@ -352,7 +356,7 @@ export default function ProfilePage() {
                 onClick={handleSaveSignature}
                 disabled={sigSaving}
                 className="px-4 py-2 text-sm font-bold text-white rounded-xl transition-all hover:-translate-y-0.5 disabled:opacity-60"
-                style={{ background: "linear-gradient(135deg,#2563eb,#4f46e5)" }}
+                style={{ background: "var(--a-gradient)" }}
               >
                 {sigSaving ? "Saving…" : "Save Signature"}
               </button>

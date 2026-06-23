@@ -1,4 +1,5 @@
 import { google } from "googleapis";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 import { encryptToken, decryptToken } from "@/lib/gmail/oauth";
 
@@ -40,7 +41,8 @@ function buildRawMessage(to: string, subject: string, body: string): string {
 // Updates the encrypted token in Supabase and returns the new access token.
 async function refreshAccessToken(
   userId: string,
-  tokenData: GmailTokenData
+  tokenData: GmailTokenData,
+  supabase: SupabaseClient
 ): Promise<string> {
   if (!tokenData.refresh_token) {
     throw new GmailSendError("No refresh token available. Please reconnect Gmail.");
@@ -58,8 +60,12 @@ async function refreshAccessToken(
   });
 
   if (!res.ok) {
+    const errBody = await res.json().catch(() => ({})) as { error?: string; error_description?: string };
+    console.error("[gmail] Token refresh failed:", res.status, errBody.error, errBody.error_description);
     throw new GmailSendError(
-      "Gmail token refresh failed. Please reconnect Gmail in Settings."
+      errBody.error === "invalid_grant"
+        ? "Gmail access has expired or been revoked. Please reconnect Gmail in Settings."
+        : "Gmail token refresh failed. Please reconnect Gmail in Settings."
     );
   }
 
@@ -70,8 +76,6 @@ async function refreshAccessToken(
     expires_at: Date.now() + data.expires_in * 1000,
   };
 
-  // Persist updated token
-  const supabase = await createClient();
   await supabase
     .from("users")
     .update({ gmail_token: encryptToken(newTokenData) })
@@ -82,13 +86,15 @@ async function refreshAccessToken(
 
 // Sends an email from the user's connected Gmail account.
 // Handles transparent token refresh on 401. Throws GmailSendError on failure.
+// Pass a service-role client when calling from a cron/background context with no user session.
 export async function sendGmail(
   userId: string,
   to: string,
   subject: string,
-  body: string
+  body: string,
+  adminClient?: SupabaseClient
 ): Promise<{ messageId: string }> {
-  const supabase = await createClient();
+  const supabase = adminClient ?? (await createClient());
 
   const { data: profile, error } = await supabase
     .from("users")
@@ -110,7 +116,7 @@ export async function sendGmail(
 
   // Proactively refresh if token expires within 5 minutes
   if (tokenData.expires_at && tokenData.expires_at - Date.now() < 5 * 60 * 1000) {
-    tokenData.access_token = await refreshAccessToken(userId, tokenData);
+    tokenData.access_token = await refreshAccessToken(userId, tokenData, supabase);
   }
 
   const auth = new google.auth.OAuth2(
@@ -132,7 +138,7 @@ export async function sendGmail(
     // 401 = token expired mid-flight, attempt one refresh + retry
     const status = (err as { code?: number })?.code;
     if (status === 401) {
-      tokenData.access_token = await refreshAccessToken(userId, tokenData);
+      tokenData.access_token = await refreshAccessToken(userId, tokenData, supabase);
       auth.setCredentials({ access_token: tokenData.access_token });
 
       const retryRes = await gmail.users.messages.send({

@@ -61,7 +61,7 @@ function SetPasswordContent() {
     return (
       <div className="text-center space-y-4">
         <p className="text-sm" style={{ color: "#fca5a5" }}>Invalid reset link.</p>
-        <Link href="/auth/reset" className="text-sm font-semibold" style={{ color: "#818cf8" }}>
+        <Link href="/auth/reset" className="text-sm font-semibold" style={{ color: "var(--a-text)" }}>
           Request a new one
         </Link>
       </div>
@@ -147,8 +147,8 @@ function SetPasswordContent() {
           disabled={loading}
           className="w-full rounded-xl py-3 text-sm font-bold text-white transition-all hover:-translate-y-0.5 disabled:opacity-60 disabled:cursor-not-allowed"
           style={{
-            background: "linear-gradient(135deg,#2563eb,#4f46e5)",
-            boxShadow: "0 4px 18px rgba(79,70,229,0.4)",
+            background: "var(--a-gradient)",
+            boxShadow: "0 4px 18px var(--a-glow)",
           }}
         >
           {loading ? "Updating…" : "Update Password"}

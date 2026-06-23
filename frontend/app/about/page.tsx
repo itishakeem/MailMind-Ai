@@ -129,7 +129,7 @@ export default function AboutPage() {
             href="/auth/signup"
             className="inline-flex items-center gap-2 rounded-lg px-6 py-3 text-sm font-medium text-white transition-colors"
             style={{ background: ACC }}
-            onMouseEnter={e => (e.currentTarget.style.background = "#4F46E5")}
+            onMouseEnter={e => (e.currentTarget.style.background = "var(--a-to)")}
             onMouseLeave={e => (e.currentTarget.style.background = ACC)}
           >
             Create Free Account <ChevronRight className="h-4 w-4" />
