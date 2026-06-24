@@ -141,6 +141,7 @@ export async function POST(request: NextRequest) {
       messages: [{ role: "system", content: systemPrompt }, ...body.messages],
       tools: AGENT_TOOLS,
       tool_choice: "auto",
+      max_tokens: 1024,
     });
   } catch (err) {
     const msg = (err as Error).message;
