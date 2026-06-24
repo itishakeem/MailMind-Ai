@@ -137,15 +137,29 @@ export async function POST(request: NextRequest) {
   let aiResponse: Awaited<ReturnType<OpenAI["chat"]["completions"]["create"]>>;
   try {
     const client = openRouter();
-    aiResponse = await client.chat.completions.create({
-      model: profile.plan === "free"
-        ? "google/gemini-2.0-flash-exp:free"
-        : "google/gemini-2.5-flash-preview:free",
-      messages: [{ role: "system", content: systemPrompt }, ...body.messages],
-      tools: AGENT_TOOLS,
-      tool_choice: "auto",
-      max_tokens: 1024,
-    });
+    const messages = [{ role: "system" as const, content: systemPrompt }, ...body.messages];
+    const primaryModel = profile.plan === "free"
+      ? "google/gemini-2.0-flash-exp:free"
+      : "google/gemini-2.5-flash-preview:free";
+
+    try {
+      aiResponse = await client.chat.completions.create({
+        model: primaryModel,
+        messages,
+        tools: AGENT_TOOLS,
+        tool_choice: "auto",
+        max_tokens: 1024,
+      });
+    } catch (primaryErr) {
+      console.warn(`[agent] Primary model (${primaryModel}) failed, falling back to openrouter/auto:`, (primaryErr as Error).message);
+      aiResponse = await client.chat.completions.create({
+        model: "openrouter/auto",
+        messages,
+        tools: AGENT_TOOLS,
+        tool_choice: "auto",
+        max_tokens: 1024,
+      });
+    }
   } catch (err) {
     const msg = (err as Error).message;
     console.error("[agent] AI call failed:", msg);
