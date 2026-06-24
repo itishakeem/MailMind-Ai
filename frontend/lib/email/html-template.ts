@@ -7,31 +7,11 @@ interface TypeTheme {
 }
 
 const THEMES: Record<string, TypeTheme> = {
-  invoice: {
-    label: "Invoice",
-    accent: "#1d4ed8",
-    badgeBg: "#eff6ff",
-  },
-  payment_reminder: {
-    label: "Payment Reminder",
-    accent: "#b45309",
-    badgeBg: "#fffbeb",
-  },
-  project_update: {
-    label: "Project Update",
-    accent: "#047857",
-    badgeBg: "#ecfdf5",
-  },
-  proposal: {
-    label: "Proposal",
-    accent: "#6d28d9",
-    badgeBg: "#f5f3ff",
-  },
-  manual: {
-    label: "Message",
-    accent: "#374151",
-    badgeBg: "#f3f4f6",
-  },
+  invoice:          { label: "Invoice",          accent: "#1d4ed8", badgeBg: "#eff6ff" },
+  payment_reminder: { label: "Payment Reminder", accent: "#b45309", badgeBg: "#fffbeb" },
+  project_update:   { label: "Project Update",   accent: "#047857", badgeBg: "#ecfdf5" },
+  proposal:         { label: "Proposal",         accent: "#6d28d9", badgeBg: "#f5f3ff" },
+  manual:           { label: "Message",          accent: "#374151", badgeBg: "#f3f4f6" },
 };
 
 function escapeAndFormat(text: string): string {
@@ -91,19 +71,24 @@ export function renderEmailHtml(
   const theme = THEMES[emailType ?? "manual"] ?? THEMES.manual;
   const bodyHtml = bodyToHtml(body);
 
+  // Only show type badge for non-manual emails
+  const badgeHtml = emailType && emailType !== "manual"
+    ? `<div style="margin-bottom:20px;">
+        <span style="display:inline-block;background-color:${theme.badgeBg};color:${theme.accent};font-size:11px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;padding:5px 14px;border-radius:99px;">${theme.label}</span>
+       </div>`
+    : "";
+
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
-<title>MailMind AI</title>
 </head>
 <body style="margin:0;padding:0;background-color:#f3f4f6;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
 <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f3f4f6;">
   <tr>
     <td align="center" style="padding:36px 16px;">
-
       <table width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;width:100%;background-color:#ffffff;border-radius:12px;overflow:hidden;">
 
         <!-- Accent bar -->
@@ -111,44 +96,10 @@ export function renderEmailHtml(
           <td style="background-color:${theme.accent};height:5px;font-size:0;line-height:0;">&nbsp;</td>
         </tr>
 
-        <!-- Brand header -->
-        <tr>
-          <td style="padding:24px 36px 20px;">
-            <table width="100%" cellpadding="0" cellspacing="0" border="0">
-              <tr>
-                <td style="vertical-align:middle;">
-                  <span style="font-size:20px;font-weight:800;color:#111827;letter-spacing:-0.5px;">MailMind</span><span style="font-size:20px;font-weight:800;color:${theme.accent};"> AI</span>
-                </td>
-                <td align="right" style="vertical-align:middle;">
-                  <span style="display:inline-block;background-color:${theme.badgeBg};color:${theme.accent};font-size:11px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;padding:5px 14px;border-radius:99px;white-space:nowrap;">${theme.label}</span>
-                </td>
-              </tr>
-            </table>
-          </td>
-        </tr>
-
-        <!-- Divider -->
-        <tr>
-          <td style="padding:0 36px;">
-            <table width="100%" cellpadding="0" cellspacing="0" border="0">
-              <tr><td style="border-top:1px solid #e5e7eb;font-size:0;line-height:0;">&nbsp;</td></tr>
-            </table>
-          </td>
-        </tr>
-
         <!-- Body -->
         <tr>
-          <td style="padding:28px 36px 32px;">
-            ${bodyHtml}
-          </td>
-        </tr>
-
-        <!-- Footer -->
-        <tr>
-          <td style="background-color:#f9fafb;border-top:1px solid #e5e7eb;padding:14px 36px;">
-            <p style="margin:0;font-size:12px;color:#9ca3af;text-align:center;">
-              Sent via <strong style="color:#6b7280;">MailMind AI</strong>
-            </p>
+          <td style="padding:32px 36px 36px;">
+            ${badgeHtml}${bodyHtml}
           </td>
         </tr>
 

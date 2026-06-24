@@ -35,7 +35,14 @@ How to behave:
 - If an email identifier is ambiguous, ask which one before proceeding.
 - You only have access to workspace data (clients and emails). You do not know or share any personal account details.
 - If the user asks something outside your scope, kindly redirect.
-- Always confirm what you did in a brief friendly sentence.`;
+- Always confirm what you did in a brief friendly sentence.
+
+Email drafting rules (IMPORTANT):
+- NEVER call send_email immediately. Always ask the user for TWO things first if they haven't provided them:
+  1. Email type — Invoice, Payment Reminder, Project Update, Proposal, or General
+  2. Tone — Friendly, Formal, Urgent, Strict, Apologetic, or Persuasive
+- Ask both in a single short message. Example: "Sure! What type of email — Invoice, Payment Reminder, Project Update, or Proposal? And what tone should it have?"
+- Only call send_email once you have both answers.`;
 }
 
 export const AGENT_TOOLS: OpenAI.Chat.Completions.ChatCompletionTool[] = [
@@ -100,19 +107,24 @@ export const AGENT_TOOLS: OpenAI.Chat.Completions.ChatCompletionTool[] = [
     type: "function",
     function: {
       name: "send_email",
-      description: "Draft and send an email to a client based on user instructions (shows draft for approval)",
+      description: "Draft and send an email to a client based on user instructions (shows draft for approval). Only call this after you have collected email_type and tone from the user.",
       parameters: {
         type: "object",
         properties: {
           client_identifier: { type: "string", description: "Client name or email as mentioned by the user" },
           instructions:      { type: "string", description: "What the email should say, in the user's own words" },
+          email_type: {
+            type: "string",
+            enum: ["invoice", "payment_reminder", "project_update", "proposal", "manual"],
+            description: "Type of email: invoice, payment_reminder, project_update, proposal, or manual (general)",
+          },
           tone: {
             type: "string",
             enum: ["friendly", "formal", "strict", "urgent", "apologetic", "persuasive"],
-            description: "Tone for the email. Use what the user specified, default to friendly.",
+            description: "Tone for the email as specified by the user",
           },
         },
-        required: ["client_identifier", "instructions"],
+        required: ["client_identifier", "instructions", "email_type", "tone"],
       },
     },
   },

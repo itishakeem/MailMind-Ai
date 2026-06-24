@@ -359,18 +359,20 @@ export async function POST(request: NextRequest) {
     }
 
     const match = matches[0];
+    const emailType = (toolArgs.email_type ?? "manual") as import("@/types").EmailType;
     const tone = (toolArgs.tone ?? "friendly") as Tone;
-    let draft: { subject: string; body: string };
+
+    let draft: { subject: string; body: string; emailType: import("@/types").EmailType; tone: string };
     try {
       const result = await generateEmail({
         text: instructions,
-        type: "manual",
+        type: emailType,
         tone,
         clientName: match.name,
         senderName: profile.name ?? undefined,
         isPro: profile.plan !== "free",
       });
-      draft = { subject: result.subject, body: result.body };
+      draft = { subject: result.subject, body: result.body, emailType, tone };
     } catch (err) {
       if (err instanceof AIUnavailableError) {
         return NextResponse.json({

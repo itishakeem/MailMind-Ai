@@ -3,6 +3,7 @@ import { assertPlanLimit, PlanLimitReachedError } from "@/lib/plan-limits";
 import { sendGmail, GmailSendError } from "@/lib/gmail/send";
 import { generatePDFReport, type ReportPeriod } from "@/lib/agent/report";
 import type { AgentActionResultResponse, AgentReportResponse } from "@/lib/agent/types";
+import type { EmailType } from "@/types";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -129,11 +130,13 @@ export async function handleSendEmail(
   supabase: SupabaseClient,
   userId: string,
   client: { id: string; name: string; email: string },
-  draft: { subject: string; body: string }
+  draft: { subject: string; body: string; emailType?: EmailType | null; tone?: string }
 ): Promise<AgentActionResultResponse> {
   let messageId: string;
   try {
-    const result = await sendGmail(userId, client.email, draft.subject, draft.body);
+    const result = await sendGmail(userId, client.email, draft.subject, draft.body, {
+      emailType: draft.emailType ?? null,
+    });
     messageId = result.messageId;
   } catch (err) {
     if (err instanceof GmailSendError) {
@@ -148,8 +151,8 @@ export async function handleSendEmail(
     client_snapshot: { name: client.name, email: client.email },
     subject: draft.subject,
     body: draft.body,
-    ai_detected_type: "manual",
-    tone: "friendly",
+    ai_detected_type: draft.emailType ?? "manual",
+    tone: draft.tone ?? "friendly",
     status: "sent",
     sent_at: new Date().toISOString(),
     gmail_message_id: messageId,
