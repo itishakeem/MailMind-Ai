@@ -19,12 +19,13 @@ import type { Tone } from "@/types";
 
 const FREE_DAILY_LIMIT = 10;
 
-function openRouter(plan: string) {
-  const isFree = plan === "free";
-  const apiKey = isFree
-    ? process.env.OPENROUTER_API_KEY_FREE
-    : process.env.OPENROUTER_API_KEY;
-  if (!apiKey) throw new Error(isFree ? "OPENROUTER_API_KEY_FREE not configured" : "OPENROUTER_API_KEY not configured");
+// Agent always uses the free key + free-tier models — no credits required.
+// The paid key (OPENROUTER_API_KEY) is reserved for email generation only.
+// Free-tier Gemini 2.0 Flash supports function/tool calling and is fast enough
+// for agent decisions. Pro plan gets the non-experimental variant.
+function openRouter() {
+  const apiKey = process.env.OPENROUTER_API_KEY_FREE ?? process.env.OPENROUTER_API_KEY;
+  if (!apiKey) throw new Error("OPENROUTER_API_KEY_FREE not configured");
   return new OpenAI({
     baseURL: "https://openrouter.ai/api/v1",
     apiKey,
@@ -135,9 +136,11 @@ export async function POST(request: NextRequest) {
 
   let aiResponse: Awaited<ReturnType<OpenAI["chat"]["completions"]["create"]>>;
   try {
-    const client = openRouter(profile.plan);
+    const client = openRouter();
     aiResponse = await client.chat.completions.create({
-      model: profile.plan === "free" ? "openrouter/auto" : "google/gemini-2.5-flash",
+      model: profile.plan === "free"
+        ? "google/gemini-2.0-flash-exp:free"
+        : "google/gemini-2.5-flash-preview:free",
       messages: [{ role: "system", content: systemPrompt }, ...body.messages],
       tools: AGENT_TOOLS,
       tool_choice: "auto",
