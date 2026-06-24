@@ -67,6 +67,7 @@ ${text.slice(0, 3000)}
 Rules:
 - Subject: concise, professional, under 80 characters
 - Body: 3–4 short paragraphs; ${closing}
+- NEVER use placeholder brackets like [Project Name], [Invoice Number], [Amount], [Date], [Your Name], or any other [bracketed text]. If a specific detail is unknown, write around it naturally or omit it entirely.
 - Do not invent financial figures or dates not present in the context
 - If currency is mentioned use PKR / Rs. format
 - Total body under 300 words
