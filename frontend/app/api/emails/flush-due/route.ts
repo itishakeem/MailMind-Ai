@@ -12,9 +12,10 @@ export async function POST() {
 
   const now = new Date().toISOString();
 
-  const { data: due, error: selectError } = await supabase
+  // Step 1: find candidate IDs for this user
+  const { data: candidates, error: selectError } = await supabase
     .from("emails")
-    .select("id, subject, body, client_snapshot, ai_detected_type")
+    .select("id")
     .eq("user_id", user.id)
     .eq("status", "scheduled")
     .lte("scheduled_at", now);
@@ -24,7 +25,26 @@ export async function POST() {
     return NextResponse.json({ error: selectError.message }, { status: 500 });
   }
 
-  const emails = due ?? [];
+  const ids = (candidates ?? []).map((e) => e.id as string);
+  if (ids.length === 0) {
+    return NextResponse.json({ processed: 0, succeeded: 0, failed: 0 });
+  }
+
+  // Step 2: atomically claim by setting status='sending'
+  const { data: claimed, error: claimError } = await supabase
+    .from("emails")
+    .update({ status: "sending" })
+    .eq("user_id", user.id)
+    .eq("status", "scheduled")
+    .in("id", ids)
+    .select("id, subject, body, client_snapshot, ai_detected_type");
+
+  if (claimError) {
+    console.error("[flush-due] CLAIM failed:", claimError);
+    return NextResponse.json({ error: claimError.message }, { status: 500 });
+  }
+
+  const emails = claimed ?? [];
   if (emails.length === 0) {
     return NextResponse.json({ processed: 0, succeeded: 0, failed: 0 });
   }

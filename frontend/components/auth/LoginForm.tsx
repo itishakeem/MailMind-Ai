@@ -1,8 +1,9 @@
 "use client";
 
 import { createClient } from "@/lib/supabase/client";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
+import { canAccess, type UserRole } from "@/types";
 import Link from "next/link";
 
 const inputStyle: React.CSSProperties = {
@@ -51,6 +52,7 @@ function Field({
 
 export default function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -61,19 +63,37 @@ export default function LoginForm() {
     setLoading(true);
 
     const supabase = createClient();
-    const { error: loginError } = await supabase.auth.signInWithPassword({
+    const { data: { user }, error: loginError } = await supabase.auth.signInWithPassword({
       email: form.email,
       password: form.password,
     });
 
     setLoading(false);
 
-    if (loginError) {
+    if (loginError || !user) {
       setError("Invalid email or password.");
       return;
     }
 
-    router.push("/dashboard");
+    // Honour an explicit redirectTo param (set by middleware for protected routes)
+    const redirectTo = searchParams.get("redirectTo");
+    if (redirectTo) {
+      router.push(redirectTo);
+      router.refresh();
+      return;
+    }
+
+    // Route admins to /admin, regular users to /dashboard
+    const { data: profile } = await supabase
+      .from("users")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+
+    const role = (profile?.role ?? "user") as UserRole;
+    const destination = canAccess(role, "support") ? "/admin" : "/dashboard";
+
+    router.push(destination);
     router.refresh();
   }
 

@@ -1,6 +1,7 @@
 import LoginForm from "@/components/auth/LoginForm";
 import GoogleSignInButton from "@/components/auth/GoogleSignInButton";
 import Link from "next/link";
+import { Suspense } from "react";
 
 export default function LoginPage() {
   return (
@@ -11,7 +12,9 @@ export default function LoginPage() {
           Sign in to your MailMind AI account.
         </p>
       </div>
-      <LoginForm />
+      <Suspense>
+        <LoginForm />
+      </Suspense>
       <div className="relative">
         <div className="absolute inset-0 flex items-center">
           <div className="w-full border-t" style={{ borderColor: "rgba(255,255,255,0.12)" }} />

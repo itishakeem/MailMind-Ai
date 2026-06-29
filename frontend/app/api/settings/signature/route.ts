@@ -8,6 +8,12 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  const { data: userData } = await supabase.from("users").select("plan").eq("id", user.id).single();
+  const isPro = userData?.plan === "pro" || userData?.plan === "business";
+  if (!isPro) {
+    return NextResponse.json({ error: "Pro plan required", upgrade_required: true }, { status: 403 });
+  }
+
   const body = await request.json().catch(() => null);
   if (!body || typeof body.signature !== "string") {
     return NextResponse.json({ error: "signature must be a string" }, { status: 400 });

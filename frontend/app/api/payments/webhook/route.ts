@@ -8,7 +8,12 @@ const PRO_STATUSES = new Set(["on_trial", "active", "past_due", "cancelled"]);
 export async function POST(req: NextRequest) {
   const body   = await req.text();
   const sig    = req.headers.get("X-Signature") ?? "";
-  const secret = process.env.LEMONSQUEEZY_WEBHOOK_SECRET ?? "";
+  const secret = process.env.LEMONSQUEEZY_WEBHOOK_SECRET;
+
+  if (!secret) {
+    console.error("[webhook] LEMONSQUEEZY_WEBHOOK_SECRET is not configured");
+    return NextResponse.json({ error: "Webhook not configured" }, { status: 500 });
+  }
 
   const expected = crypto.createHmac("sha256", secret).update(body).digest("hex");
   let valid = false;
