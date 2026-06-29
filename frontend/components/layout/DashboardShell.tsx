@@ -11,6 +11,18 @@ import type { User } from "@/types";
 const INACTIVITY_MS    = 7 * 24 * 60 * 60 * 1000;
 const LAST_ACTIVE_KEY  = "mailmind_last_active";
 const COLLAPSED_KEY    = "mailmind_sidebar_collapsed";
+const FLUSH_INTERVAL_MS = 5 * 60 * 1000; // flush due emails every 5 min while user is active
+
+// Silently flushes past-due scheduled emails on mount and every 5 minutes.
+// This is the primary dispatch path on the Hobby plan (daily cron is the fallback).
+function useFlushDueEmails() {
+  useEffect(() => {
+    const flush = () => fetch("/api/emails/flush-due", { method: "POST" }).catch(() => {});
+    flush();
+    const id = setInterval(flush, FLUSH_INTERVAL_MS);
+    return () => clearInterval(id);
+  }, []);
+}
 
 function useInactivityLogout() {
   const router = useRouter();
@@ -56,6 +68,7 @@ export default function DashboardShell({
   children: React.ReactNode;
 }) {
   useInactivityLogout();
+  useFlushDueEmails();
 
   const [sidebarOpen,       setSidebarOpen]       = useState(false);
   const [desktopCollapsed,  setDesktopCollapsed]  = useState(false);
