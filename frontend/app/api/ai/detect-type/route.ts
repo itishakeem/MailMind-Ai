@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const result = await detectEmailType(text);
-    return NextResponse.json(result);
+    return NextResponse.json({ detected_type: result.type, confidence: result.confidence });
   } catch (err) {
     if (err instanceof AIUnavailableError) {
       return NextResponse.json(

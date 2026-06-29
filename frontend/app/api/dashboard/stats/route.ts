@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { PLAN_LIMITS } from "@/types";
 import { NextResponse } from "next/server";
-import type { Plan, ClientActivity } from "@/types";
+import type { Plan, ClientActivity, DailyEmailCount } from "@/types";
 
 export async function GET() {
   const supabase = await createClient();
@@ -14,8 +14,11 @@ export async function GET() {
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
   const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999).toISOString();
 
+  const sevenDaysAgo = new Date(Date.now() - 6 * 24 * 60 * 60 * 1000);
+  sevenDaysAgo.setHours(0, 0, 0, 0);
+
   // Run all queries in parallel
-  const [sentResult, scheduledResult, allSentResult, clientCountResult, userResult] =
+  const [sentResult, scheduledResult, allSentResult, clientCountResult, userResult, weekResult] =
     await Promise.all([
       // Emails sent this calendar month
       supabase
@@ -54,6 +57,14 @@ export async function GET() {
         .select("plan, name")
         .eq("id", user.id)
         .single(),
+
+      // Sent emails over the last 7 days for the activity chart
+      supabase
+        .from("emails")
+        .select("sent_at")
+        .eq("user_id", user.id)
+        .eq("status", "sent")
+        .gte("sent_at", sevenDaysAgo.toISOString()),
     ]);
 
   const emailsSentThisMonth = sentResult.count ?? 0;
@@ -96,7 +107,25 @@ export async function GET() {
       if (!b.last_sent_at) return -1;
       return b.last_sent_at.localeCompare(a.last_sent_at);
     })
-    .slice(0, 10); // Top 10 most recent
+    .slice(0, 10);
+
+  // Build 7-day daily counts (today = index 6, 6 days ago = index 0)
+  const DAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const dailyMap = new Map<string, number>();
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    dailyMap.set(d.toISOString().slice(0, 10), 0);
+  }
+  for (const row of weekResult.data ?? []) {
+    const day = (row.sent_at as string | null)?.slice(0, 10);
+    if (day && dailyMap.has(day)) dailyMap.set(day, (dailyMap.get(day) ?? 0) + 1);
+  }
+  const daily_emails: DailyEmailCount[] = Array.from(dailyMap.entries()).map(([date, count]) => ({
+    date,
+    label: DAY_LABELS[new Date(date + "T12:00:00").getDay()],
+    count,
+  }));
 
   return NextResponse.json({
     emails_sent_this_month: emailsSentThisMonth,
@@ -110,5 +139,6 @@ export async function GET() {
       clients_used: clientsCount,
       clients_limit: limits.max_clients,
     },
+    daily_emails,
   });
 }

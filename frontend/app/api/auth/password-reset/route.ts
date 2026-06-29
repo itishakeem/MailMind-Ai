@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
   if (allowed) {
     const supabase = await createClient();
     await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${request.nextUrl.origin}/auth/reset-password`,
+      redirectTo: `${request.nextUrl.origin}/auth/set-password`,
     });
   } else {
     // Log for observability without leaking to the client

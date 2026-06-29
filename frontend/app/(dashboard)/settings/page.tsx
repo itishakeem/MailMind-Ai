@@ -32,6 +32,11 @@ export default function SettingsPage() {
       .then(r => r.json())
       .then(setGmailStatus)
       .catch(() => setGmailStatus({ connected: false, gmail_email: null }));
+
+    fetch("/api/profile")
+      .then(r => r.json())
+      .then(d => { if (typeof d.email_signature === "string") setSignature(d.email_signature); })
+      .catch(() => {});
   }, []);
 
   async function handleDisconnect() {

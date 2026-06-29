@@ -18,18 +18,25 @@ export async function POST(request: NextRequest) {
 
 async function handler(request: NextRequest) {
   const authHeader = request.headers.get("authorization");
-  const expectedToken = `Bearer ${process.env.CRON_SECRET}`;
+  const cronSecret = process.env.CRON_SECRET;
 
-  if (!authHeader || authHeader !== expectedToken) {
+  if (!cronSecret) {
+    console.error("[cron] CRON_SECRET is not configured");
+    return NextResponse.json({ error: "Cron not configured" }, { status: 500 });
+  }
+
+  if (!authHeader || authHeader !== `Bearer ${cronSecret}`) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const supabase = createAdminClient();
   const now = new Date().toISOString();
 
-  const { data: due, error: selectError } = await supabase
+  // Two-step atomic claim to prevent double-sends across concurrent cron instances.
+  // Step 1: Find candidate IDs.
+  const { data: candidates, error: selectError } = await supabase
     .from("emails")
-    .select("id, user_id, subject, body, client_snapshot, scheduled_at, ai_detected_type")
+    .select("id")
     .eq("status", "scheduled")
     .lte("scheduled_at", now)
     .limit(50);
@@ -39,7 +46,27 @@ async function handler(request: NextRequest) {
     return NextResponse.json({ error: "Failed to fetch emails" }, { status: 500 });
   }
 
-  const emails = due ?? [];
+  const ids = (candidates ?? []).map((e) => e.id as string);
+  if (ids.length === 0) {
+    return NextResponse.json({ processed: 0, succeeded: 0, failed: 0 });
+  }
+
+  // Step 2: Claim by setting status='sending' WHERE status='scheduled'.
+  // If a concurrent cron already claimed a row, its status won't be 'scheduled'
+  // anymore and it won't appear in the RETURNING result — no double-send possible.
+  const { data: claimed, error: claimError } = await supabase
+    .from("emails")
+    .update({ status: "sending" })
+    .eq("status", "scheduled")
+    .in("id", ids)
+    .select("id, user_id, subject, body, client_snapshot, scheduled_at, ai_detected_type");
+
+  if (claimError) {
+    console.error("[cron] Failed to claim emails:", claimError.message);
+    return NextResponse.json({ error: "Failed to claim emails" }, { status: 500 });
+  }
+
+  const emails = claimed ?? [];
   let succeeded = 0;
   let failed = 0;
 

@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import StatCard from "@/components/dashboard/StatCard";
 import ClientActivityTable from "@/components/dashboard/ClientActivityTable";
+import EmailActivityChart from "@/components/dashboard/EmailActivityChart";
 import GmailConnectBanner from "@/components/ui/GmailConnectBanner";
 import ProBadge from "@/components/ui/ProBadge";
 import Skeleton from "@/components/ui/Skeleton";
@@ -300,15 +301,31 @@ function DashboardContent() {
         </div>
       </FadeSection>
 
+      {/* 7-day email activity chart */}
+      <FadeSection delay={200}>
+        {loading ? (
+          <div
+            className="rounded-2xl p-6"
+            style={{ background: "var(--bg-surface)", border: "1px solid var(--border)", boxShadow: "var(--shadow-sm)" }}
+          >
+            <div className="h-5 w-40 rounded-lg mb-1 animate-pulse" style={{ background: "rgba(0,0,0,0.06)" }} />
+            <div className="h-3 w-28 rounded mb-5 animate-pulse" style={{ background: "rgba(0,0,0,0.04)" }} />
+            <div className="h-40 rounded-xl animate-pulse" style={{ background: "rgba(0,0,0,0.04)" }} />
+          </div>
+        ) : (
+          <EmailActivityChart data={stats?.daily_emails ?? []} />
+        )}
+      </FadeSection>
+
       {/* Plan usage rings — free plan only */}
       {stats && stats.plan === "free" && (
-        <FadeSection delay={200}>
+        <FadeSection delay={260}>
           <PlanUsageSection stats={stats} />
         </FadeSection>
       )}
 
       {/* Client activity */}
-      <FadeSection delay={240}>
+      <FadeSection delay={320}>
         <div
           className="rounded-2xl"
           style={{ background: "var(--bg-surface)", border: "1px solid var(--border)", boxShadow: "var(--shadow-sm)" }}

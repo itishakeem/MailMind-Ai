@@ -34,14 +34,15 @@ export async function middleware(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
 
-  // Protect all dashboard routes
+  // Protect all dashboard and admin routes
   const isDashboardRoute =
     pathname.startsWith("/dashboard") ||
     pathname.startsWith("/clients") ||
     pathname.startsWith("/compose") ||
     pathname.startsWith("/scheduled") ||
     pathname.startsWith("/settings") ||
-    pathname.startsWith("/profile");
+    pathname.startsWith("/profile") ||
+    pathname.startsWith("/admin");
 
   if (isDashboardRoute && !user) {
     const loginUrl = request.nextUrl.clone();
@@ -50,15 +51,27 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  // Redirect authenticated users away from auth pages
+  // Redirect authenticated non-admin users away from auth pages.
+  // Admins are allowed through so they can re-authenticate.
   const isAuthRoute =
     pathname.startsWith("/auth/login") ||
     pathname.startsWith("/auth/signup");
 
   if (isAuthRoute && user) {
-    const dashboardUrl = request.nextUrl.clone();
-    dashboardUrl.pathname = "/dashboard";
-    return NextResponse.redirect(dashboardUrl);
+    const { data: profile } = await supabase
+      .from("users")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+
+    const role = profile?.role ?? "user";
+    const isAdmin = ["support", "moderator", "admin", "super_admin"].includes(role);
+
+    if (!isAdmin) {
+      const dashboardUrl = request.nextUrl.clone();
+      dashboardUrl.pathname = "/dashboard";
+      return NextResponse.redirect(dashboardUrl);
+    }
   }
 
   return supabaseResponse;

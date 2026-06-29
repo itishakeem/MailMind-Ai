@@ -36,22 +36,22 @@ function OtpContent() {
   const [error, setError] = useState<string | null>(null);
   const [resending, setResending] = useState(false);
   const [resent, setResent] = useState(false);
-  const refs = Array.from({ length: 6 }, () => useRef<HTMLInputElement>(null));
+  const inputRefs = useRef<Array<HTMLInputElement | null>>([null, null, null, null, null, null]);
 
   // Auto-focus first input on mount
-  useEffect(() => { refs[0].current?.focus(); }, []);
+  useEffect(() => { inputRefs.current[0]?.focus(); }, []);
 
   function handleChange(idx: number, val: string) {
     const digit = val.replace(/\D/g, "").slice(-1);
     const next = [...digits];
     next[idx] = digit;
     setDigits(next);
-    if (digit && idx < 5) refs[idx + 1].current?.focus();
+    if (digit && idx < 5) inputRefs.current[idx + 1]?.focus();
   }
 
   function handleKeyDown(idx: number, e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.key === "Backspace" && !digits[idx] && idx > 0) {
-      refs[idx - 1].current?.focus();
+      inputRefs.current[idx - 1]?.focus();
     }
   }
 
@@ -59,7 +59,7 @@ function OtpContent() {
     const pasted = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
     if (pasted.length === 6) {
       setDigits(pasted.split(""));
-      refs[5].current?.focus();
+      inputRefs.current[5]?.focus();
     }
   }
 
@@ -125,7 +125,7 @@ function OtpContent() {
     setResending(false);
     setResent(true);
     setDigits(["", "", "", "", "", ""]);
-    refs[0].current?.focus();
+    inputRefs.current[0]?.focus();
   }
 
   const title = type === "signup" ? "Verify your email" : "Check your email";
@@ -150,7 +150,7 @@ function OtpContent() {
         {digits.map((d, i) => (
           <input
             key={i}
-            ref={refs[i]}
+            ref={el => { inputRefs.current[i] = el; }}
             type="text"
             inputMode="numeric"
             maxLength={1}
