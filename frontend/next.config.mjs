@@ -44,6 +44,14 @@ const nextConfig = {
       },
     ];
   },
+  webpack(config) {
+    // @supabase/supabase-js references process.version internally; suppress the
+    // Edge Runtime warning since it doesn't affect runtime behaviour on Vercel.
+    config.ignoreWarnings = [
+      { module: /node_modules\/@supabase\/supabase-js/ },
+    ];
+    return config;
+  },
 };
 
 export default nextConfig;
