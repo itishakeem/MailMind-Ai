@@ -10,9 +10,7 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const now = new Date();
-  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-  const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999).toISOString();
+  const last24h = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
 
   const sevenDaysAgo = new Date(Date.now() - 6 * 24 * 60 * 60 * 1000);
   sevenDaysAgo.setHours(0, 0, 0, 0);
@@ -20,14 +18,13 @@ export async function GET() {
   // Run all queries in parallel
   const [sentResult, scheduledResult, allSentResult, clientCountResult, userResult, weekResult] =
     await Promise.all([
-      // Emails sent this calendar month
+      // Emails sent in last 24 hours (matches daily limit window)
       supabase
         .from("emails")
         .select("id", { count: "exact", head: true })
         .eq("user_id", user.id)
         .eq("status", "sent")
-        .gte("sent_at", startOfMonth)
-        .lte("sent_at", endOfMonth),
+        .gte("sent_at", last24h),
 
       // Currently scheduled emails
       supabase
@@ -67,7 +64,7 @@ export async function GET() {
         .gte("sent_at", sevenDaysAgo.toISOString()),
     ]);
 
-  const emailsSentThisMonth = sentResult.count ?? 0;
+  const emailsSentThisMonth = sentResult.count ?? 0; // last 24h for free plan display
   const scheduledCount = scheduledResult.count ?? 0;
   const clientsCount = clientCountResult.count ?? 0;
   const plan = (userResult.data?.plan ?? "free") as Plan;
@@ -135,7 +132,7 @@ export async function GET() {
     user_name: userName,
     plan_usage: {
       emails_used: emailsSentThisMonth,
-      emails_limit: limits.max_emails_per_month,
+      emails_limit: limits.max_emails_per_day,
       clients_used: clientsCount,
       clients_limit: limits.max_clients,
     },

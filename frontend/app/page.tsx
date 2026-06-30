@@ -37,7 +37,7 @@ const FEATURES = [
 const PRICING: { name: string; price: string; period: string; highlight: boolean; comingSoon?: boolean; features: string[]; cta: string }[] = [
   {
     name: "Free", price: "$0", period: "forever", highlight: false,
-    features: ["20 emails / day", "5 clients", "Basic AI generation", "Gmail connect"],
+    features: ["15 emails / day", "5 clients", "Basic AI generation", "Gmail connect"],
     cta: "Get Started",
   },
   {
@@ -137,7 +137,7 @@ function DashboardMockup() {
           <div className="rounded-xl p-3 mb-2" style={{ background: SURF, border: `1px solid ${BORD}` }}>
             <div className="flex items-center justify-between mb-2">
               <span className="text-[9px] font-semibold" style={{ color: SEC }}>Daily Usage</span>
-              <span className="text-[9px] font-bold" style={{ color: ACC }}>7 / 20 emails today</span>
+              <span className="text-[9px] font-bold" style={{ color: ACC }}>7 / 15 emails today</span>
             </div>
             <div className="h-1.5 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.08)" }}>
               <div className="h-full rounded-full" style={{ width: "70%", background: "linear-gradient(90deg,#3b82f6,#6366f1)" }} />
