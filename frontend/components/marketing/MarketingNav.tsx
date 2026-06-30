@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { Menu, X, Zap } from "lucide-react";
+import { Menu, X } from "lucide-react";
 
 const NAV_LINKS = [
   { label: "Features", href: "/#features" },
@@ -24,12 +25,13 @@ export default function MarketingNav() {
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 group">
-          <div
-            className="flex h-8 w-8 items-center justify-center rounded-lg transition-opacity group-hover:opacity-80"
-            style={{ background: "#6366F1" }}
-          >
-            <Zap className="h-4 w-4 text-white" />
-          </div>
+          <Image
+            src="/logo.png"
+            alt="MailMind AI"
+            width={32}
+            height={32}
+            className="rounded-lg transition-opacity group-hover:opacity-80"
+          />
           <span className="text-base font-semibold tracking-tight" style={{ color: "#F8F8FF" }}>
             MailMind AI
           </span>

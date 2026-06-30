@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useTheme } from "@/components/ThemeProvider";
 import type { User } from "@/types";
 
@@ -71,12 +72,13 @@ export default function Navbar({ user, onMenuToggle }: NavbarProps) {
 
       {/* Logo */}
       <Link href="/dashboard" className="flex items-center gap-2.5 group">
-        <div
-          className="flex h-7 w-7 items-center justify-center rounded-lg text-xs font-extrabold text-white transition-transform group-hover:scale-105"
-          style={{ background: "linear-gradient(135deg, var(--a-from), var(--a-to))" }}
-        >
-          M
-        </div>
+        <Image
+          src="/logo.png"
+          alt="MailMind AI"
+          width={28}
+          height={28}
+          className="rounded-lg transition-transform group-hover:scale-105"
+        />
         <span className="text-base font-bold transition-colors" style={{ color: "var(--text-1)" }}>
           MailMind <span className="gradient-text-static">AI</span>
         </span>

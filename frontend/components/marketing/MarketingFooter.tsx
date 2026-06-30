@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Zap } from "lucide-react";
+import Image from "next/image";
 
 const LINKS = {
   Product: [
@@ -26,9 +26,7 @@ export default function MarketingFooter() {
           {/* Brand */}
           <div className="col-span-2 sm:col-span-1">
             <Link href="/" className="flex items-center gap-2 mb-3">
-              <div className="flex h-7 w-7 items-center justify-center rounded-lg" style={{ background: "#6366F1" }}>
-                <Zap className="h-3.5 w-3.5 text-white" />
-              </div>
+              <Image src="/logo.png" alt="MailMind AI" width={28} height={28} className="rounded-lg" />
               <span className="text-sm font-semibold" style={{ color: "#F8F8FF" }}>MailMind AI</span>
             </Link>
             <p className="text-xs leading-relaxed" style={{ color: "#9CA3AF" }}>

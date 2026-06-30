@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { useTheme } from "@/components/ThemeProvider";
@@ -127,12 +128,13 @@ export default function Sidebar({
           className="flex items-center gap-2.5 group min-w-0"
           title="MailMind AI"
         >
-          <div
-            className="flex-shrink-0 flex h-8 w-8 items-center justify-center rounded-xl text-xs font-extrabold text-white transition-transform group-hover:scale-105 animate-logo-glow"
-            style={{ background: "var(--a-gradient)" }}
-          >
-            M
-          </div>
+          <Image
+            src="/logo.png"
+            alt="MailMind AI"
+            width={32}
+            height={32}
+            className="flex-shrink-0 rounded-xl transition-transform group-hover:scale-105 animate-logo-glow"
+          />
           {!collapsed && (
             <span className="text-sm font-bold text-white/80 group-hover:text-white transition-colors whitespace-nowrap">
               MailMind AI
