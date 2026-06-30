@@ -18,9 +18,9 @@ const FLUSH_INTERVAL_MS = 60 * 1000; // flush due emails every minute while user
 function useFlushDueEmails() {
   useEffect(() => {
     const flush = () => fetch("/api/emails/flush-due", { method: "POST" }).catch(() => {});
-    flush();
+    const boot = setTimeout(flush, 5_000);
     const id = setInterval(flush, FLUSH_INTERVAL_MS);
-    return () => clearInterval(id);
+    return () => { clearTimeout(boot); clearInterval(id); };
   }, []);
 }
 

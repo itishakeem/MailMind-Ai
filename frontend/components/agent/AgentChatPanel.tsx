@@ -267,7 +267,7 @@ export default function AgentChatPanel({ user }: { user: User }) {
       {/* ── Chat panel ───────────────────────────────────────────────────────── */}
       {isOpen && (
         <div className="fixed z-50 flex flex-col overflow-hidden bg-[#0f172a]
-          inset-0 rounded-none
+          inset-x-0 bottom-0 h-[82svh] rounded-t-2xl
           sm:inset-auto sm:bottom-5 sm:right-5 sm:w-[340px] sm:h-[520px] sm:rounded-2xl
           border border-slate-700 shadow-2xl shadow-black/60"
         >
