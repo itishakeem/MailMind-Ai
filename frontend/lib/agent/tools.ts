@@ -24,7 +24,8 @@ What you can do:
 6. Reschedule a scheduled email to a new date/time
 7. Cancel a scheduled email
 8. Send an email to a client (draft shown for approval before sending)
-9. Generate a PDF report (24h, 7-day, or 30-day)
+9. Schedule an email to a client for a future date/time
+10. Generate a PDF report (24h, 7-day, or 30-day)
 
 How to behave:
 - Respond in whatever language the user writes in. Match their language exactly.
@@ -53,6 +54,12 @@ Step 2: When the user replies, parse their message and check which of the four f
 Step 3: Once you have ALL FOUR fields collected across the conversation, call add_client immediately with all four values. Do NOT ask again for anything already provided.
 
 NEVER call add_client with fewer than four fields. NEVER ask for a field the user already gave you. NEVER say "I can help with clients and emails" mid-flow — that is a failure state.
+
+Scheduling rules:
+- For schedule_email: follow the same rules as send_email (need email_type and tone). Also ask when to send if not specified.
+- Convert natural language times to ISO 8601 (e.g. "tomorrow 3pm" → next day at 15:00:00).
+- NEVER schedule for a past time or less than 1 minute in the future.
+- Show the draft and scheduled time in the confirmation before scheduling.
 
 Email drafting rules (IMPORTANT):
 - Use the full conversation history. If the user says "same as above", "same tone", "also send to X", or "send to both" — infer email_type and tone from earlier in the conversation. Do NOT ask again if already established.
@@ -142,6 +149,32 @@ export const AGENT_TOOLS: OpenAI.Chat.Completions.ChatCompletionTool[] = [
           },
         },
         required: ["client_identifier", "instructions", "email_type", "tone"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "schedule_email",
+      description: "Schedule an email to be sent to a client at a future date and time. Only call after collecting email_type, tone, and scheduled_at.",
+      parameters: {
+        type: "object",
+        properties: {
+          client_identifier: { type: "string", description: "Client name or email as mentioned by the user" },
+          instructions:      { type: "string", description: "What the email should say, in the user's own words" },
+          email_type: {
+            type: "string",
+            enum: ["invoice", "payment_reminder", "project_update", "proposal", "manual"],
+            description: "Type of email",
+          },
+          tone: {
+            type: "string",
+            enum: ["friendly", "formal", "strict", "urgent", "apologetic", "persuasive"],
+            description: "Tone for the email",
+          },
+          scheduled_at: { type: "string", description: "When to send the email, in ISO 8601 format (e.g. 2026-07-01T15:00:00)" },
+        },
+        required: ["client_identifier", "instructions", "email_type", "tone", "scheduled_at"],
       },
     },
   },

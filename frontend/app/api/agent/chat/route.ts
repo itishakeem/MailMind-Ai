@@ -8,6 +8,7 @@ import {
   handleUpdateClient,
   handleRemoveClient,
   handleSendEmail,
+  handleScheduleEmail,
   handleRescheduleEmail,
   handleCancelScheduledEmail,
   handleGenerateReport,
@@ -87,6 +88,11 @@ export async function POST(request: NextRequest) {
         } satisfies AgentResponse);
       }
       const result = await handleSendEmail(supabase, user.id, action.client, action.draft);
+      return NextResponse.json(result satisfies AgentResponse);
+    }
+
+    if (action.type === "schedule_email") {
+      const result = await handleScheduleEmail(supabase, user.id, action.client, action.draft, action.scheduled_at);
       return NextResponse.json(result satisfies AgentResponse);
     }
 
@@ -393,6 +399,85 @@ export async function POST(request: NextRequest) {
         type: "send_email",
         client: { id: match.id, name: match.name, email: match.email },
         draft,
+      },
+    } satisfies AgentResponse);
+  }
+
+  // ── schedule_email ────────────────────────────────────────────────────────────
+
+  if (toolName === "schedule_email") {
+    const clientIdentifier = toolArgs.client_identifier ?? "";
+    const instructions     = toolArgs.instructions      ?? "";
+    const scheduledAt      = toolArgs.scheduled_at      ?? "";
+
+    if (!profile.gmail_token) {
+      return NextResponse.json({
+        type: "text",
+        content: "Your Gmail isn't connected. Go to Settings and connect it first.",
+      } satisfies AgentResponse);
+    }
+
+    const scheduledDate = new Date(scheduledAt);
+    if (isNaN(scheduledDate.getTime()) || scheduledDate <= new Date(Date.now() + 60 * 1000)) {
+      return NextResponse.json({
+        type: "text",
+        content: "Please give me a valid date/time at least 1 minute in the future.",
+      } satisfies AgentResponse);
+    }
+
+    const { data: clients } = await supabase
+      .from("clients")
+      .select("id, name, email, company")
+      .eq("user_id", user.id);
+
+    const matches = fuzzyMatchClients(clients ?? [], clientIdentifier);
+
+    if (matches.length === 0) {
+      return NextResponse.json({
+        type: "text",
+        content: `No client found matching "${clientIdentifier}". Add them first, then try again.`,
+      } satisfies AgentResponse);
+    }
+
+    if (matches.length > 1) {
+      return NextResponse.json({
+        type: "clarification",
+        content: `Found ${matches.length} clients matching "${clientIdentifier}". Which one should I schedule the email for?`,
+        options: matches,
+      } satisfies AgentResponse);
+    }
+
+    const match = matches[0];
+    const emailType = (toolArgs.email_type ?? "manual") as import("@/types").EmailType;
+    const tone = (toolArgs.tone ?? "friendly") as Tone;
+
+    let draft: { subject: string; body: string; emailType: import("@/types").EmailType; tone: string };
+    try {
+      const result = await generateEmail({
+        text: instructions,
+        type: emailType,
+        tone,
+        clientName: match.name,
+        senderName: profile.name ?? undefined,
+        isPro: profile.plan !== "free",
+      });
+      draft = { subject: result.subject, body: result.body, emailType, tone };
+    } catch (err) {
+      if (err instanceof AIUnavailableError) {
+        return NextResponse.json({ type: "text", content: "The AI email writer is temporarily unavailable. Please try again." } satisfies AgentResponse);
+      }
+      return NextResponse.json({ type: "text", content: "Couldn't draft the email. Please try again." } satisfies AgentResponse);
+    }
+
+    const dateStr = scheduledDate.toLocaleString("en-PK", { dateStyle: "medium", timeStyle: "short" });
+    return NextResponse.json({
+      type: "confirmation",
+      content: `Here's the draft for ${match.name}, scheduled for ${dateStr}. Confirm?`,
+      pendingAction: {
+        type: "schedule_email",
+        client: { id: match.id, name: match.name, email: match.email },
+        draft,
+        scheduled_at: scheduledDate.toISOString(),
       },
     } satisfies AgentResponse);
   }

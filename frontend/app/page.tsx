@@ -37,7 +37,7 @@ const FEATURES = [
 const PRICING: { name: string; price: string; period: string; highlight: boolean; comingSoon?: boolean; features: string[]; cta: string }[] = [
   {
     name: "Free", price: "$0", period: "forever", highlight: false,
-    features: ["10 emails / month", "3 clients", "Basic AI generation", "Gmail connect"],
+    features: ["20 emails / day", "5 clients", "Basic AI generation", "Gmail connect"],
     cta: "Get Started",
   },
   {
@@ -136,8 +136,8 @@ function DashboardMockup() {
           {/* Usage ring mini */}
           <div className="rounded-xl p-3 mb-2" style={{ background: SURF, border: `1px solid ${BORD}` }}>
             <div className="flex items-center justify-between mb-2">
-              <span className="text-[9px] font-semibold" style={{ color: SEC }}>Monthly Usage</span>
-              <span className="text-[9px] font-bold" style={{ color: ACC }}>7 / 10 emails</span>
+              <span className="text-[9px] font-semibold" style={{ color: SEC }}>Daily Usage</span>
+              <span className="text-[9px] font-bold" style={{ color: ACC }}>7 / 20 emails today</span>
             </div>
             <div className="h-1.5 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.08)" }}>
               <div className="h-full rounded-full" style={{ width: "70%", background: "linear-gradient(90deg,#3b82f6,#6366f1)" }} />
@@ -180,13 +180,22 @@ export default function HomePage() {
 
       {/* ── Hero ──────────────────────────────────────────────── */}
       <section className="relative mx-auto max-w-6xl px-4 sm:px-6 pt-24 pb-20 text-center overflow-hidden">
-        {/* Ambient gradient orbs */}
-        <div className="pointer-events-none absolute inset-0 overflow-hidden">
-          <div className="absolute -top-40 left-1/2 -translate-x-1/2 h-[720px] w-[720px] rounded-full opacity-30 blur-3xl animate-float"
+        {/* Starfield background */}
+        <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
+          <div style={{
+            position: "absolute", inset: 0,
+            backgroundImage: "radial-gradient(circle, rgba(255,255,255,0.10) 1px, transparent 1px), radial-gradient(circle, rgba(255,255,255,0.05) 1px, transparent 1px)",
+            backgroundSize: "90px 90px, 35px 35px",
+            backgroundPosition: "0 0, 45px 18px",
+          }} />
+          {/* Static ambient orbs — no animation for performance */}
+          <div className="absolute -top-40 left-1/2 -translate-x-1/2 h-[600px] w-[600px] rounded-full opacity-25 blur-[120px]"
             style={{ background: "radial-gradient(circle,#4f46e5,transparent 65%)" }} />
-          <div className="absolute top-60 -left-32 h-[480px] w-[480px] rounded-full opacity-20 blur-3xl animate-float" style={{ background: "radial-gradient(circle,#2563eb,transparent 65%)", animationDelay: "2s" }} />
-          <div className="absolute top-40 -right-32 h-[480px] w-[480px] rounded-full opacity-20 blur-3xl animate-float" style={{ background: "radial-gradient(circle,#7c3aed,transparent 65%)", animationDelay: "4s" }} />
-          <div className="absolute bottom-10 left-1/2 -translate-x-1/2 h-[240px] w-[600px] rounded-full opacity-15 blur-3xl"
+          <div className="absolute top-60 -left-32 h-[380px] w-[380px] rounded-full opacity-15 blur-[100px]"
+            style={{ background: "radial-gradient(circle,#2563eb,transparent 65%)" }} />
+          <div className="absolute top-40 -right-32 h-[380px] w-[380px] rounded-full opacity-15 blur-[100px]"
+            style={{ background: "radial-gradient(circle,#7c3aed,transparent 65%)" }} />
+          <div className="absolute bottom-10 left-1/2 -translate-x-1/2 h-[200px] w-[500px] rounded-full opacity-10 blur-[80px]"
             style={{ background: "radial-gradient(ellipse,#6366f1,transparent 70%)" }} />
         </div>
 

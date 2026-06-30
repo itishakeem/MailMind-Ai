@@ -58,24 +58,20 @@ export async function assertPlanLimit(
   }
 
   if (type === "email_send") {
-    const maxEmails = limits.max_emails_per_month;
+    const maxEmails = limits.max_emails_per_day;
     if (maxEmails === null) return;
 
-    const now = new Date();
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-    const endOfMonth   = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59).toISOString();
+    const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
 
-    // Count sent emails this calendar month + ALL currently queued scheduled emails.
-    // Counting scheduled prevents the race where a user schedules N emails simultaneously
-    // before any of them show as 'sent', bypassing the monthly cap.
+    // Count emails sent in last 24h + all pending scheduled emails.
+    // Counting pending prevents gaming the limit by scheduling many at once.
     const [sentResult, scheduledResult] = await Promise.all([
       supabase
         .from("emails")
         .select("id", { count: "exact", head: true })
         .eq("user_id", userId)
         .eq("status", "sent")
-        .gte("sent_at", startOfMonth)
-        .lte("sent_at", endOfMonth),
+        .gte("sent_at", cutoff),
       supabase
         .from("emails")
         .select("id", { count: "exact", head: true })
@@ -90,7 +86,7 @@ export async function assertPlanLimit(
 
     if (current >= maxEmails) {
       throw new PlanLimitReachedError({
-        error: `You have reached the ${plan} plan limit of ${maxEmails} emails this month.`,
+        error: `You have reached the free plan limit of ${maxEmails} emails per day. Resets in 24 hours.`,
         limit_type: "emails_per_month",
         current_count: current,
         max_allowed: maxEmails,

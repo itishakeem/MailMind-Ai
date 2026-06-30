@@ -40,12 +40,20 @@ export interface PendingCancelScheduledEmail {
   email: { id: string; subject: string; client_name: string; scheduled_at: string };
 }
 
+export interface PendingScheduleEmail {
+  type: "schedule_email";
+  client: { id: string; name: string; email: string };
+  draft: { subject: string; body: string };
+  scheduled_at: string;
+}
+
 export type PendingAction =
   | PendingRemoveClient
   | PendingSendEmail
   | PendingUpdateClient
   | PendingRescheduleEmail
-  | PendingCancelScheduledEmail;
+  | PendingCancelScheduledEmail
+  | PendingScheduleEmail;
 
 // ── API request ───────────────────────────────────────────────────────────────
 

@@ -442,6 +442,23 @@ export default function AgentChatPanel({ user }: { user: User }) {
                   />
                 )}
 
+                {pendingAction?.type === "schedule_email" && !isLoading && (
+                  <ConfirmActionCard
+                    title="Schedule Email"
+                    description={`Send to ${pendingAction.client.name} at the scheduled time below.`}
+                    details={[
+                      { label: "To",        value: `${pendingAction.client.name} (${pendingAction.client.email})` },
+                      { label: "Subject",   value: pendingAction.draft.subject },
+                      { label: "Scheduled", value: new Date(pendingAction.scheduled_at).toLocaleString("en-PK", { dateStyle: "medium", timeStyle: "short" }) },
+                    ]}
+                    confirmLabel="Yes, Schedule"
+                    confirmVariant="primary"
+                    loadingLabel="Scheduling…"
+                    onConfirm={handleConfirm}
+                    isLoading={isLoading}
+                  />
+                )}
+
                 {pendingAction?.type === "reschedule_email" && !isLoading && (
                   <ConfirmActionCard
                     title="Reschedule Email"

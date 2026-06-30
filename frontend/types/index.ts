@@ -66,14 +66,14 @@ export interface Document {
 }
 
 export interface PlanLimits {
-  max_emails_per_month: number | null; // null = unlimited
+  max_emails_per_day: number | null; // null = unlimited; resets every 24 hours
   max_clients: number | null;
 }
 
 export const PLAN_LIMITS: Record<Plan, PlanLimits> = {
-  free: { max_emails_per_month: 10, max_clients: 5 },
-  pro: { max_emails_per_month: null, max_clients: null },
-  business: { max_emails_per_month: null, max_clients: null },
+  free:     { max_emails_per_day: 20, max_clients: 5 },
+  pro:      { max_emails_per_day: null, max_clients: null },
+  business: { max_emails_per_day: null, max_clients: null },
 };
 
 export interface PlanLimitError {

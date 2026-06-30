@@ -165,6 +165,37 @@ export async function handleSendEmail(
   };
 }
 
+export async function handleScheduleEmail(
+  supabase: SupabaseClient,
+  userId: string,
+  client: { id: string; name: string; email: string },
+  draft: { subject: string; body: string; emailType?: EmailType | null; tone?: string },
+  scheduledAt: string
+): Promise<AgentActionResultResponse> {
+  const { error } = await supabase.from("emails").insert({
+    user_id: userId,
+    client_id: client.id,
+    client_snapshot: { name: client.name, email: client.email },
+    subject: draft.subject,
+    body: draft.body,
+    ai_detected_type: draft.emailType ?? "manual",
+    tone: draft.tone ?? "friendly",
+    status: "scheduled",
+    scheduled_at: scheduledAt,
+  });
+
+  if (error) {
+    return { type: "action_result", content: "Couldn't schedule the email. Please try again.", success: false };
+  }
+
+  const dateStr = new Date(scheduledAt).toLocaleString("en-PK", { dateStyle: "medium", timeStyle: "short" });
+  return {
+    type: "action_result",
+    content: `Email to ${client.name} scheduled for ${dateStr}. ✓`,
+    success: true,
+  };
+}
+
 export async function handleRescheduleEmail(
   supabase: SupabaseClient,
   userId: string,
