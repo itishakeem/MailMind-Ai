@@ -2,16 +2,60 @@ import type { EmailType } from "@/types";
 
 interface TypeTheme {
   label: string;
+  icon: string;
+  gradientFrom: string;
+  gradientTo: string;
   accent: string;
   badgeBg: string;
+  badgeColor: string;
 }
 
 const THEMES: Record<string, TypeTheme> = {
-  invoice:          { label: "Invoice",          accent: "#1d4ed8", badgeBg: "#eff6ff" },
-  payment_reminder: { label: "Payment Reminder", accent: "#b45309", badgeBg: "#fffbeb" },
-  project_update:   { label: "Project Update",   accent: "#047857", badgeBg: "#ecfdf5" },
-  proposal:         { label: "Proposal",         accent: "#6d28d9", badgeBg: "#f5f3ff" },
-  manual:           { label: "Message",          accent: "#374151", badgeBg: "#f3f4f6" },
+  invoice: {
+    label: "Invoice",
+    icon: "💳",
+    gradientFrom: "#1e40af",
+    gradientTo: "#2563eb",
+    accent: "#1d4ed8",
+    badgeBg: "#dbeafe",
+    badgeColor: "#1e40af",
+  },
+  payment_reminder: {
+    label: "Payment Reminder",
+    icon: "⏰",
+    gradientFrom: "#92400e",
+    gradientTo: "#d97706",
+    accent: "#b45309",
+    badgeBg: "#fef3c7",
+    badgeColor: "#92400e",
+  },
+  project_update: {
+    label: "Project Update",
+    icon: "📋",
+    gradientFrom: "#065f46",
+    gradientTo: "#059669",
+    accent: "#047857",
+    badgeBg: "#d1fae5",
+    badgeColor: "#065f46",
+  },
+  proposal: {
+    label: "Proposal",
+    icon: "✨",
+    gradientFrom: "#4c1d95",
+    gradientTo: "#7c3aed",
+    accent: "#6d28d9",
+    badgeBg: "#ede9fe",
+    badgeColor: "#4c1d95",
+  },
+  manual: {
+    label: "Message",
+    icon: "✉️",
+    gradientFrom: "#1f2937",
+    gradientTo: "#374151",
+    accent: "#374151",
+    badgeBg: "#f3f4f6",
+    badgeColor: "#374151",
+  },
 };
 
 function escapeAndFormat(text: string): string {
@@ -71,13 +115,6 @@ export function renderEmailHtml(
   const theme = THEMES[emailType ?? "manual"] ?? THEMES.manual;
   const bodyHtml = bodyToHtml(body);
 
-  // Only show type badge for non-manual emails
-  const badgeHtml = emailType && emailType !== "manual"
-    ? `<div style="margin-bottom:20px;">
-        <span style="display:inline-block;background-color:${theme.badgeBg};color:${theme.accent};font-size:11px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;padding:5px 14px;border-radius:99px;">${theme.label}</span>
-       </div>`
-    : "";
-
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -89,17 +126,36 @@ export function renderEmailHtml(
 <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f3f4f6;">
   <tr>
     <td align="center" style="padding:36px 16px;">
-      <table width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;width:100%;background-color:#ffffff;border-radius:12px;overflow:hidden;">
+      <table width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;width:100%;background-color:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
 
-        <!-- Accent bar -->
+        <!-- Colorful header -->
         <tr>
-          <td style="background-color:${theme.accent};height:5px;font-size:0;line-height:0;">&nbsp;</td>
+          <td style="background:linear-gradient(135deg,${theme.gradientFrom},${theme.gradientTo});padding:36px 36px 32px;text-align:center;">
+            <div style="font-size:44px;line-height:1;margin-bottom:14px;">${theme.icon}</div>
+            <span style="display:inline-block;background:rgba(255,255,255,0.18);color:#ffffff;font-size:11px;font-weight:800;letter-spacing:1.8px;text-transform:uppercase;padding:6px 20px;border-radius:99px;border:1px solid rgba(255,255,255,0.3);">${theme.label}</span>
+          </td>
+        </tr>
+
+        <!-- Divider bar -->
+        <tr>
+          <td style="background:linear-gradient(90deg,${theme.gradientFrom},${theme.gradientTo});height:3px;font-size:0;line-height:0;">&nbsp;</td>
         </tr>
 
         <!-- Body -->
         <tr>
-          <td style="padding:32px 36px 36px;">
-            ${badgeHtml}${bodyHtml}
+          <td style="padding:32px 36px 28px;">
+            ${bodyHtml}
+          </td>
+        </tr>
+
+        <!-- Footer -->
+        <tr>
+          <td style="background:#f9fafb;padding:18px 36px;border-top:1px solid #e5e7eb;text-align:center;">
+            <p style="margin:0;font-size:12px;color:#9ca3af;">
+              Sent via <strong style="color:${theme.accent};">MailMind AI</strong>
+              &nbsp;·&nbsp;
+              <a href="https://mailmindai.xyz" style="color:${theme.accent};text-decoration:none;">mailmindai.xyz</a>
+            </p>
           </td>
         </tr>
 
