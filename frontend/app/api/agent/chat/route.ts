@@ -30,7 +30,7 @@ function openRouter() {
     baseURL: "https://openrouter.ai/api/v1",
     apiKey,
     defaultHeaders: {
-      "HTTP-Referer": process.env.NEXT_PUBLIC_APP_URL ?? "https://mail-mind-ai-snowy.vercel.app",
+      "HTTP-Referer": process.env.NEXT_PUBLIC_APP_URL ?? "https://mailmindai.xyz",
       "X-Title": "MailMind AI",
     },
   });
